@@ -32,6 +32,7 @@ $isActive = fn (string $path) => str_starts_with($current, $path)
         <span class="logo-text">Rezult</span>
     </div>
 
+    <div class="sidebar-menu">
     <p class="sidebar-section">Financeiro</p>
     <nav class="sidebar-nav">
         <?php foreach ($navMain as [$path, $icon, $label]): ?>
@@ -84,6 +85,7 @@ $isActive = fn (string $path) => str_starts_with($current, $path)
         </a>
         <?php endforeach; ?>
     </nav>
+    </div>
 
     <div class="sidebar-footer">
         <small>Rezult · Gestão financeira</small>
