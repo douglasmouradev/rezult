@@ -1,0 +1,76 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Controllers;
+
+use App\Core\View;
+use App\Helpers\Session;
+use App\Models\Conciliacao;
+use App\Models\Conta;
+use App\Models\Lancamento;
+use App\Services\ConciliacaoService;
+
+final class ConciliacaoController
+{
+    public function __construct(
+        private Conciliacao $model = new Conciliacao(),
+        private ConciliacaoService $service = new ConciliacaoService(),
+        private Conta $contas = new Conta(),
+        private Lancamento $lancamentos = new Lancamento(),
+    ) {}
+
+    private function eid(): int
+    {
+        return (int) Session::get('empresa_id');
+    }
+
+    public function index(): void
+    {
+        View::render('conciliacoes/index', [
+            'title' => 'Conciliação bancária',
+            'lista' => $this->model->listar($this->eid()),
+            'contas' => $this->contas->findAll($this->eid(), 'nome ASC'),
+        ]);
+    }
+
+    public function importar(): void
+    {
+        $eid = $this->eid();
+        $contaId = (int) ($_POST['conta_id'] ?? 0);
+        if (empty($_FILES['csv']['tmp_name'])) {
+            Session::flash('error', 'Envie um arquivo CSV.');
+            View::redirect('/conciliacoes');
+        }
+        $id = $this->service->importarCsv($eid, $contaId, $_FILES['csv']['tmp_name']);
+        Session::flash('success', 'Extrato importado. Revise os itens pendentes.');
+        View::redirect('/conciliacoes/' . $id);
+    }
+
+    public function ver(int $id): void
+    {
+        $eid = $this->eid();
+        $conc = $this->model->find($id, $eid);
+        if (!$conc) {
+            View::redirect('/conciliacoes');
+        }
+        View::render('conciliacoes/ver', [
+            'title' => 'Conciliação',
+            'conciliacao' => $conc,
+            'itens' => $this->model->itens($id),
+            'lancamentos' => $this->lancamentos->listarFiltrado($eid, ['status' => 'pago'], 1, 100)['items'],
+        ]);
+    }
+
+    public function conciliar(int $id): void
+    {
+        $this->service->conciliarManual(
+            (int) $_POST['item_id'],
+            (int) $_POST['lancamento_id'],
+            $this->eid(),
+            $id
+        );
+        Session::flash('success', 'Item conciliado.');
+        View::redirect('/conciliacoes/' . $id);
+    }
+}

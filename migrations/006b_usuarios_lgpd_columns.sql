@@ -1,0 +1,4 @@
+SET NAMES utf8mb4;
+ALTER TABLE usuarios ADD COLUMN marketing_optin TINYINT(1) DEFAULT 0;
+ALTER TABLE usuarios ADD COLUMN excluido_em DATETIME NULL;
+ALTER TABLE usuarios ADD COLUMN anonimizado TINYINT(1) DEFAULT 0;

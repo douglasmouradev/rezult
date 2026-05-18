@@ -1,0 +1,63 @@
+SET NAMES utf8mb4;
+
+CREATE TABLE IF NOT EXISTS notificacoes (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  usuario_id BIGINT UNSIGNED NOT NULL,
+  empresa_id BIGINT UNSIGNED NULL,
+  titulo VARCHAR(200) NOT NULL,
+  mensagem TEXT,
+  lida TINYINT(1) DEFAULT 0,
+  criado_em DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
+  INDEX idx_usuario_lida (usuario_id, lida)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS centros_custo (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  empresa_id BIGINT UNSIGNED NOT NULL,
+  nome VARCHAR(120) NOT NULL,
+  codigo VARCHAR(20),
+  ativo TINYINT(1) DEFAULT 1,
+  FOREIGN KEY (empresa_id) REFERENCES empresas(id) ON DELETE CASCADE,
+  INDEX idx_empresa (empresa_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS orcamentos (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  empresa_id BIGINT UNSIGNED NOT NULL,
+  categoria_id BIGINT UNSIGNED NULL,
+  mes CHAR(7) NOT NULL,
+  valor_planejado DECIMAL(15,2) NOT NULL,
+  FOREIGN KEY (empresa_id) REFERENCES empresas(id) ON DELETE CASCADE,
+  FOREIGN KEY (categoria_id) REFERENCES categorias(id) ON DELETE SET NULL,
+  UNIQUE KEY uk_orcamento (empresa_id, categoria_id, mes)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS api_tokens (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  usuario_id BIGINT UNSIGNED NOT NULL,
+  empresa_id BIGINT UNSIGNED NOT NULL,
+  nome VARCHAR(100) NOT NULL,
+  token_hash VARCHAR(255) NOT NULL,
+  prefixo VARCHAR(12) NOT NULL,
+  ultimo_uso DATETIME NULL,
+  expira_em DATETIME NULL,
+  criado_em DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
+  FOREIGN KEY (empresa_id) REFERENCES empresas(id) ON DELETE CASCADE,
+  INDEX idx_prefixo (prefixo)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS consentimentos_visitante (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  session_hash VARCHAR(64) NOT NULL,
+  ip VARCHAR(45),
+  user_agent VARCHAR(500),
+  aceito TINYINT(1) DEFAULT 1,
+  criado_em DATETIME DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_session (session_hash)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+ALTER TABLE lancamentos ADD COLUMN centro_custo_id BIGINT UNSIGNED NULL;
+ALTER TABLE lancamentos ADD COLUMN aprovado_por BIGINT UNSIGNED NULL;
+ALTER TABLE lancamentos ADD COLUMN aprovado_em DATETIME NULL;

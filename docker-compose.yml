@@ -1,0 +1,31 @@
+services:
+  app:
+    image: php:8.3-cli
+    working_dir: /app
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    command: php -S 0.0.0.0:8000 -t public
+    depends_on:
+      - db
+    environment:
+      DB_HOST: db
+      DB_DATABASE: rezult
+      DB_USERNAME: rezult
+      DB_PASSWORD: rezult
+
+  db:
+    image: mysql:8.4
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: rezult
+      MYSQL_USER: rezult
+      MYSQL_PASSWORD: rezult
+    ports:
+      - "3306:3306"
+    volumes:
+      - rezult_mysql:/var/lib/mysql
+
+volumes:
+  rezult_mysql:
