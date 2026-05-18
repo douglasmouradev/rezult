@@ -31,7 +31,10 @@ final class ErrorHandler
             'trace' => $e->getTraceAsString(),
         ]);
 
-        http_response_code(500);
+        if (!headers_sent()) {
+            http_response_code(500);
+        }
+
         if (App::config('debug')) {
             echo '<pre>' . htmlspecialchars($e->getMessage() . "\n" . $e->getTraceAsString()) . '</pre>';
             return;

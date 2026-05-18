@@ -98,10 +98,12 @@ final class DashboardService
             'vencendo' => $vencendo,
         ];
 
-        $_SESSION['dashboard_cache'][$empresaId] = [
+        $cacheAll = Session::get('dashboard_cache', []);
+        $cacheAll[$empresaId] = [
             'expires' => time() + $ttl,
             'data' => $data,
         ];
+        Session::set('dashboard_cache', $cacheAll);
 
         return $data;
     }

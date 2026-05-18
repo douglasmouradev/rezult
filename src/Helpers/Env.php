@@ -25,7 +25,10 @@ final class Env
             $key = trim($key);
             $value = trim($value, " \t\"'");
             $_ENV[$key] = $value;
-            putenv("{$key}={$value}");
+            $_SERVER[$key] = $value;
+            if (\function_exists('putenv')) {
+                putenv("{$key}={$value}");
+            }
         }
     }
 }

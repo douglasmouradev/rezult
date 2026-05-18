@@ -1,8 +1,14 @@
 <?php
 $iniciais = '';
+$initial = static function (string $s): string {
+    if ($s === '') {
+        return '';
+    }
+    return function_exists('mb_substr') ? mb_substr($s, 0, 1) : substr($s, 0, 1);
+};
 if (!empty($usuario['nome'])) {
     $partes = preg_split('/\s+/', trim($usuario['nome']));
-    $iniciais = strtoupper(mb_substr($partes[0], 0, 1) . (isset($partes[1]) ? mb_substr($partes[1], 0, 1) : ''));
+    $iniciais = strtoupper($initial($partes[0]) . (isset($partes[1]) ? $initial($partes[1]) : ''));
 }
 $meses = ['', 'janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
 $mesAtual = $meses[(int) date('n')] . ' ' . date('Y');

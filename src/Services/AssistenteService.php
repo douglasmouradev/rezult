@@ -85,14 +85,14 @@ final class AssistenteService
 
     private function openAiDisponivel(): bool
     {
-        return (bool) getenv('OPENAI_API_KEY');
+        return (bool) ($_ENV['OPENAI_API_KEY'] ?? '');
     }
 
     private function responderOpenAi(int $empresaId, string $pergunta): ?string
     {
         $ctx = $this->dashboard->dados($empresaId);
         $payload = [
-            'model' => getenv('OPENAI_MODEL') ?: 'gpt-4o-mini',
+            'model' => $_ENV['OPENAI_MODEL'] ?? 'gpt-4o-mini',
             'messages' => [
                 ['role' => 'system', 'content' => 'Você é assistente financeiro do Rezult. Responda em português, de forma breve, com valores em R$.'],
                 ['role' => 'user', 'content' => "Contexto: saldo={$ctx['saldo_total']}, receitas_mes={$ctx['receitas_mes']}, despesas_mes={$ctx['despesas_mes']}. Pergunta: {$pergunta}"],
@@ -106,7 +106,7 @@ final class AssistenteService
             CURLOPT_POST => true,
             CURLOPT_HTTPHEADER => [
                 'Content-Type: application/json',
-                'Authorization: Bearer ' . getenv('OPENAI_API_KEY'),
+                'Authorization: Bearer ' . ($_ENV['OPENAI_API_KEY'] ?? ''),
             ],
             CURLOPT_POSTFIELDS => json_encode($payload),
             CURLOPT_TIMEOUT => 15,

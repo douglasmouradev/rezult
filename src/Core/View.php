@@ -21,7 +21,14 @@ final class View
         $appUrl = App::config('url');
         $empresaId = (int) Session::get('empresa_id');
         $podeGerenciar = $empresaId > 0 && \App\Policies\TenantPolicy::podeGerenciarConfig($empresaId);
-        $notifCount = $usuario ? (new \App\Services\NotificationService())->contarNaoLidas((int) Session::get('usuario_id')) : 0;
+        $notifCount = 0;
+        if ($usuario) {
+            try {
+                $notifCount = (new \App\Services\NotificationService())->contarNaoLidas((int) Session::get('usuario_id'));
+            } catch (\Throwable) {
+                $notifCount = 0;
+            }
+        }
 
         $viewPath = App::basePath() . '/src/Views/' . str_replace('.', '/', $view) . '.php';
 
