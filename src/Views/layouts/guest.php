@@ -7,13 +7,18 @@
     <title><?= $title ?? 'Rezult' ?></title>
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
-    <link rel="stylesheet" href="/assets/css/app.css?v=corp">
+    <link rel="stylesheet" href="/assets/css/app.css?v=corp5">
 </head>
 <body class="guest-body">
     <div class="guest-wrap">
         <div class="guest-brand">
-            <span class="logo-mark">R</span>
-            <span class="logo-text">Rezult</span>
+            <?php
+            $asLink = false;
+            $class = 'brand-logo--guest';
+            $imgClass = 'brand-logo__img--guest';
+            $imgHeight = 52;
+            require dirname(__DIR__) . '/partials/brand-logo.php';
+            ?>
             <p class="logo-tagline">Gestão financeira corporativa — clara, segura e profissional.</p>
             <ul class="guest-features">
                 <li><i class="ph ph-chart-line-up"></i> Dashboard com visão de caixa em tempo real</li>

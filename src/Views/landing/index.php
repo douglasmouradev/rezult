@@ -1,9 +1,13 @@
 <nav class="lp-nav" id="lp-nav">
     <div class="lp-container lp-nav-inner">
-        <a href="/" class="lp-logo">
-            <span class="lp-logo-mark">R</span>
-            Rezult
-        </a>
+        <?php
+        $asLink = true;
+        $href = '/';
+        $class = 'lp-logo';
+        $imgClass = 'brand-logo__img--landing';
+        $imgHeight = 38;
+        require dirname(__DIR__) . '/partials/brand-logo.php';
+        ?>
         <button type="button" class="lp-menu-toggle" aria-label="Menu" id="lp-menu-btn">
             <i class="ph ph-list"></i>
         </button>
@@ -213,9 +217,14 @@
     <div class="lp-container">
         <div class="lp-footer-grid">
             <div>
-                <a href="/" class="lp-logo lp-logo-footer">
-                    <span class="lp-logo-mark">R</span> Rezult
-                </a>
+                <?php
+                $asLink = true;
+                $href = '/';
+                $class = 'lp-logo lp-logo-footer';
+                $imgClass = 'brand-logo__img--footer';
+                $imgHeight = 36;
+                require dirname(__DIR__) . '/partials/brand-logo.php';
+                ?>
                 <p class="lp-footer-tagline">
                     Gestão financeira empresarial clara, segura e em conformidade com a LGPD.
                 </p>

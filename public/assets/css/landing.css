@@ -56,17 +56,8 @@ html { scroll-behavior: smooth; }
   font-size: 1.35rem;
 }
 
-.lp-logo-mark {
-  width: 36px;
-  height: 36px;
-  background: linear-gradient(135deg, var(--lp-primary), #3b82f6);
-  color: #fff;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1rem;
-}
+.lp-logo .brand-logo__img--landing { max-height: 38px; width: auto; }
+.lp-logo-footer .brand-logo__img--footer { max-height: 36px; width: auto; }
 
 .lp-nav-links {
   display: flex;

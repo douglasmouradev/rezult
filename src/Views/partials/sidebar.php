@@ -28,8 +28,14 @@ $isActive = fn (string $path) => str_starts_with($current, $path)
 <div class="sidebar-overlay" aria-hidden="true"></div>
 <aside class="sidebar" id="sidebar">
     <div class="sidebar-brand">
-        <span class="logo-mark">R</span>
-        <span class="logo-text">Rezult</span>
+        <?php
+        $asLink = true;
+        $href = '/dashboard';
+        $class = 'brand-logo--sidebar';
+        $imgClass = 'brand-logo__img--sidebar';
+        $imgHeight = 34;
+        require __DIR__ . '/brand-logo.php';
+        ?>
     </div>
 
     <div class="sidebar-menu">

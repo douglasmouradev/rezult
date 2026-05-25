@@ -79,25 +79,28 @@ h1, h2, h3, .logo-text, .page-title, .card-title {
 }
 
 .sidebar-brand {
-  display: flex;
-  align-items: center;
-  gap: 12px;
   padding: 4px 10px 24px;
 }
 
-.logo-mark {
-  width: 40px; height: 40px;
-  background: var(--accent);
-  color: #ffffff;
-  border-radius: 8px;
-  display: flex;
+.brand-logo {
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  font-family: var(--font);
-  font-weight: 800;
-  font-size: 19px;
-  box-shadow: var(--shadow-sm);
+  gap: 10px;
+  text-decoration: none;
+  color: inherit;
 }
+
+.brand-logo__img {
+  display: block;
+  width: auto;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.brand-logo--sidebar .brand-logo__img--sidebar { max-height: 34px; }
+.brand-logo--guest { flex-direction: column; align-items: flex-start; gap: 12px; }
+.brand-logo--guest .brand-logo__img--guest { max-height: 52px; }
+.brand-logo--guest .logo-text { font-size: 2.5rem; }
 
 .logo-text { font-weight: 700; font-size: 1.15rem; letter-spacing: -0.02em; }
 
@@ -1182,13 +1185,8 @@ tbody tr:last-child td { border-bottom: none; }
 
 .guest-brand { padding-right: 20px; }
 
-.guest-brand .logo-mark {
-  width: 56px; height: 56px;
-  font-size: 26px;
-  margin-bottom: 20px;
-}
-
-.guest-brand .logo-text { font-size: 2.5rem; display: block; margin-bottom: 12px; }
+.guest-brand .brand-logo--guest { margin-bottom: 8px; }
+.guest-brand .logo-text { display: block; margin-bottom: 12px; }
 
 .guest-brand .logo-tagline {
   color: var(--text-muted);

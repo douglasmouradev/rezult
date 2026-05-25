@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Syne:wght@600;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
-    <link rel="stylesheet" href="/assets/css/landing.css?v=2">
+    <link rel="stylesheet" href="/assets/css/landing.css?v=3">
 </head>
 <body class="landing-body">
 <?= $content ?>
