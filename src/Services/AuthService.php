@@ -68,6 +68,28 @@ final class AuthService
         }
     }
 
+    /** Rota adequada após login (evita loop em /empresas/criar). */
+    public function rotaPosLogin(): string
+    {
+        if (\App\Policies\SuperAdminPolicy::isSuperadmin() && !Session::get('empresa_id')) {
+            $lista = Session::get('empresas', []);
+            if (empty($lista)) {
+                return '/superadmin';
+            }
+        }
+
+        $lista = Session::get('empresas', []);
+        if (empty($lista)) {
+            return '/empresas/criar';
+        }
+
+        if (Session::get('empresa_id')) {
+            return '/dashboard';
+        }
+
+        return '/empresas';
+    }
+
     public function definirEmpresaAtiva(int $empresaId, ?array $lista = null): void
     {
         $usuarioId = (int) Session::get('usuario_id');

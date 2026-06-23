@@ -71,7 +71,7 @@ final class AuthController
         }
 
         $this->auth()->login($usuario, !empty($_POST['lembrar']));
-        View::redirect('/dashboard');
+        View::redirect($this->auth()->rotaPosLogin());
     }
 
     public function registerForm(): void

@@ -34,7 +34,18 @@ final class EmpresaController
 
     public function criarForm(): void
     {
-        View::render('empresas/form', ['title' => 'Nova empresa', 'empresa' => null]);
+        $empresas = Session::get('empresas', []);
+        $plan = new PlanService();
+        if (!empty($empresas) && !$plan->podeCriarEmpresa(TenantPolicy::usuarioId())) {
+            Session::flash('error', 'Limite de empresas do seu plano atingido. Gerencie suas lojas existentes.');
+            View::redirect('/empresas');
+        }
+
+        View::render('empresas/form', [
+            'title' => 'Nova empresa',
+            'empresa' => null,
+            'primeiraEmpresa' => empty($empresas),
+        ]);
     }
 
     public function criar(): void
@@ -57,6 +68,10 @@ final class EmpresaController
         $this->auth->definirEmpresaAtiva($id, $this->model->listarPorUsuario($usuarioId));
         AuditoriaService::registrar('empresa_criada', 'empresa', $id);
         Session::flash('success', 'Empresa criada!');
+        if (!Session::get('empresa_id')) {
+            Session::flash('error', 'Empresa criada, mas não foi possível ativá-la automaticamente.');
+            View::redirect('/empresas');
+        }
         View::redirect('/dashboard');
     }
 

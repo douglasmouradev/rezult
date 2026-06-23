@@ -12,7 +12,7 @@ final class GuestMiddleware
     public function __invoke(callable $next): void
     {
         if (Session::get('usuario_id')) {
-            View::redirect('/dashboard');
+            View::redirect((new \App\Services\AuthService())->rotaPosLogin());
         }
         $next();
     }

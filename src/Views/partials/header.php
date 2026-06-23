@@ -1,4 +1,6 @@
 <?php
+$current = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
+$planSvcHeader = new \App\Services\PlanService();
 $iniciais = '';
 $initial = static function (string $s): string {
     if ($s === '') {
@@ -47,10 +49,13 @@ $mesAtual = $meses[(int) date('n')] . ' ' . date('Y');
         <?php if (!empty($empresas)): ?>
         <form method="post" action="/empresas/<?= (int)($empresa['id'] ?? 0) ?>/trocar" class="empresa-selector" id="empresa-form">
             <input type="hidden" name="_csrf" value="<?= $csrf ?>">
-            <select name="empresa_switch" aria-label="Empresa ativa" onchange="this.form.action='/empresas/'+this.value+'/trocar'; this.form.submit()">
-                <?php foreach ($empresas as $e): ?>
-                <option value="<?= $e['id'] ?>" <?= ($empresa['id'] ?? 0) == $e['id'] ? 'selected' : '' ?>>
-                    <?= htmlspecialchars($e['nome']) ?>
+            <select name="empresa_switch" aria-label="Empresa ativa" onchange="if(!this.options[this.selectedIndex].disabled){this.form.action='/empresas/'+this.value+'/trocar';this.form.submit()}">
+                <?php foreach ($empresas as $e):
+                    $bloqueio = $planSvcHeader->motivoBloqueio($e);
+                    $operacional = $bloqueio === null;
+                ?>
+                <option value="<?= $e['id'] ?>" <?= !$operacional ? 'disabled' : '' ?> <?= ($empresa['id'] ?? 0) == $e['id'] ? 'selected' : '' ?>>
+                    <?= htmlspecialchars($e['nome']) ?><?= !$operacional ? ' (indisponível)' : '' ?>
                 </option>
                 <?php endforeach; ?>
             </select>

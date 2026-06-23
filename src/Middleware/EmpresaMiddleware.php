@@ -16,6 +16,11 @@ final class EmpresaMiddleware
     {
         $empresaId = Session::get('empresa_id');
         if (!$empresaId) {
+            $empresas = Session::get('empresas', []);
+            if (!empty($empresas)) {
+                Session::flash('error', 'Nenhuma loja ativa no momento. Verifique o status do plano em Empresas.');
+                View::redirect('/empresas');
+            }
             View::redirect('/empresas/criar');
         }
 
