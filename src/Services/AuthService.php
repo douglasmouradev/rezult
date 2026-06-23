@@ -8,6 +8,7 @@ use App\Core\App;
 use App\Helpers\Session;
 use App\Models\Empresa;
 use App\Models\Usuario;
+use App\Helpers\MailTemplate;
 use App\Services\MailService;
 
 final class AuthService
@@ -139,7 +140,12 @@ final class AuthService
         $usuario->execute(['id' => $usuarioId]);
         $u = $usuario->fetch();
         if ($u) {
-            (new MailService())->enviar($u['email'], 'Rezult — ' . $tipo, "Acesse: {$link}");
+            $tpl = match ($tipo) {
+                'confirmacao' => MailTemplate::confirmacao($u['nome'], $link),
+                'recuperacao' => MailTemplate::recuperacao($u['nome'], $link),
+                default => ['subject' => 'Rezult — ' . $tipo, 'html' => '<p>' . htmlspecialchars($link) . '</p>', 'text' => $link],
+            };
+            (new MailService())->enviarTemplate($u['email'], $tpl);
         }
         if (App::config('debug') && App::config('env') !== 'production') {
             \App\Core\Logger::info('Token e-mail dev', ['tipo' => $tipo, 'usuario_id' => $usuarioId]);

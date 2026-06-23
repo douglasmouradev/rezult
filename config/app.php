@@ -13,6 +13,10 @@ return [
     'mail_from' => $_ENV['MAIL_FROM'] ?? 'noreply@rezult.local',
     'mail_from_name' => $_ENV['MAIL_FROM_NAME'] ?? 'Rezult',
     'mail_host' => $_ENV['MAIL_HOST'] ?? '',
+    'mail_port' => (int) ($_ENV['MAIL_PORT'] ?? 587),
+    'mail_user' => $_ENV['MAIL_USER'] ?? '',
+    'mail_password' => $_ENV['MAIL_PASSWORD'] ?? '',
+    'mail_encryption' => $_ENV['MAIL_ENCRYPTION'] ?? 'tls',
     'lgpd_dpo_email' => $_ENV['LGPD_DPO_EMAIL'] ?? 'privacidade@rezult.app',
     'superadmin_email' => $_ENV['SUPERADMIN_EMAIL'] ?? '',
 ];

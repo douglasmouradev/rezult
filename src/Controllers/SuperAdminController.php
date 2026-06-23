@@ -23,6 +23,8 @@ final class SuperAdminController
             'title' => 'Superadmin',
             'stats' => $this->service->dashboard(),
             'recentes' => $this->service->usuariosRecentes(),
+            'loginsPorDia' => $this->service->loginsPorDia(14),
+            'expirando' => $this->service->empresasPlanoExpirando(7),
         ]);
     }
 
@@ -265,6 +267,15 @@ final class SuperAdminController
         View::render('superadmin/logins', [
             'title' => 'Logins — Superadmin',
             'logins' => $this->service->listarLogins(),
+        ]);
+    }
+
+    public function sistema(): void
+    {
+        View::render('superadmin/sistema', [
+            'title' => 'Sistema — Superadmin',
+            'logs' => \App\Core\Logger::tail(300),
+            'migrations' => $this->service->statusMigrations(),
         ]);
     }
 

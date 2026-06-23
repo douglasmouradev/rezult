@@ -38,6 +38,13 @@ final class AuthController
         $email = Sanitize::raw($_POST['email'] ?? '');
         $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
 
+        $rate = new RateLimitService();
+        if ($rate->excedido('login_ip', $ip, 30, 15)) {
+            Session::flash('error', 'Muitas tentativas deste IP. Aguarde 15 minutos.');
+            View::redirect('/login');
+        }
+        $rate->registrar('login_ip', $ip);
+
         if ($this->auth()->tentativasExcedidas($email, $ip)) {
             Session::flash('error', 'Muitas tentativas. Aguarde 15 minutos.');
             View::redirect('/login');

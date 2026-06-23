@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Helpers\MailTemplate;
 use App\Helpers\Sanitize;
 use App\Models\Cobranca;
 use App\Models\Lancamento;
@@ -106,7 +107,8 @@ final class CobrancaService
             $corpo .= "Boleto: {$c['linha_digitavel']}\n\n";
         }
         $corpo .= "— Enviado pelo Rezult";
-        return (new MailService())->enviar($c['cliente_email'], 'Cobrança: ' . $c['descricao'], $corpo);
+        $tpl = MailTemplate::cobranca($c['descricao'], $valor, $corpo);
+        return (new MailService())->enviarTemplate($c['cliente_email'], $tpl);
     }
 
     public function marcarPaga(int $id, int $empresaId): void

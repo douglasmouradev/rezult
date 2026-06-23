@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Core\App;
+use PDO;
 
 final class SuperAdminService
 {
@@ -508,5 +509,79 @@ final class SuperAdminService
         }
 
         App::pdo()->prepare('UPDATE usuarios SET is_superadmin = 1 WHERE id = :id')->execute(['id' => $usuarioId]);
+    }
+
+    /** @return list<array{data: string, total: int}> */
+    public function loginsPorDia(int $dias = 14): array
+    {
+        $dias = max(7, min(60, $dias));
+        $stmt = App::pdo()->query(
+            'SELECT DATE(criado_em) AS data, COUNT(*) AS total
+             FROM login_tentativas
+             WHERE sucesso = 1 AND criado_em >= DATE_SUB(CURDATE(), INTERVAL ' . ($dias - 1) . ' DAY)
+             GROUP BY DATE(criado_em)
+             ORDER BY data ASC'
+        );
+        $map = [];
+        foreach ($stmt->fetchAll() as $row) {
+            $map[$row['data']] = (int) $row['total'];
+        }
+
+        $resultado = [];
+        for ($i = $dias - 1; $i >= 0; $i--) {
+            $data = date('Y-m-d', strtotime("-{$i} days"));
+            $resultado[] = ['data' => $data, 'total' => $map[$data] ?? 0];
+        }
+
+        return $resultado;
+    }
+
+    /** @return list<array{arquivo: string, aplicado: bool, aplicado_em: ?string}> */
+    public function statusMigrations(): array
+    {
+        $dir = App::basePath() . '/migrations';
+        $aplicados = [];
+        try {
+            $aplicados = App::pdo()->query('SELECT arquivo, aplicado_em FROM migrations_log')->fetchAll(PDO::FETCH_ASSOC) ?: [];
+        } catch (\Throwable) {
+            // migrations_log pode não existir ainda
+        }
+        $map = [];
+        foreach ($aplicados as $row) {
+            $map[$row['arquivo']] = $row['aplicado_em'];
+        }
+
+        $lista = [];
+        foreach (glob($dir . '/*.sql') ?: [] as $file) {
+            $nome = basename($file);
+            $lista[] = [
+                'arquivo' => $nome,
+                'aplicado' => isset($map[$nome]),
+                'aplicado_em' => $map[$nome] ?? null,
+            ];
+        }
+        usort($lista, static fn ($a, $b) => strcmp($a['arquivo'], $b['arquivo']));
+
+        return $lista;
+    }
+
+    /** @return list<array<string, mixed>> */
+    public function empresasPlanoExpirando(int $dias = 7): array
+    {
+        if (!$this->temColuna('empresas', 'plano_expira_em')) {
+            return [];
+        }
+
+        $lim = $this->limiteSql(20, 50);
+        $stmt = App::pdo()->query(
+            'SELECT id, nome, plano, plano_expira_em, plano_ativo, ativo
+             FROM empresas
+             WHERE plano_expira_em IS NOT NULL
+             AND plano_expira_em BETWEEN NOW() AND DATE_ADD(NOW(), INTERVAL ' . max(1, min(30, $dias)) . ' DAY)
+             ORDER BY plano_expira_em ASC
+             LIMIT ' . $lim
+        );
+
+        return $stmt->fetchAll() ?: [];
     }
 }

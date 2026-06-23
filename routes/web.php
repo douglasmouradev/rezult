@@ -103,6 +103,7 @@ $router->post('/superadmin/empresas/atualizar', $wrap([SuperAdminController::cla
 $router->post('/superadmin/empresas/status', $wrap([SuperAdminController::class, 'alternarAtivo']), [$auth, $superadmin, $csrf]);
 $router->post('/superadmin/empresas/plano', $wrap([SuperAdminController::class, 'alternarPlano']), [$auth, $superadmin, $csrf]);
 $router->get('/superadmin/logins', $wrap([SuperAdminController::class, 'logins']), [$auth, $superadmin]);
+$router->get('/superadmin/sistema', $wrap([SuperAdminController::class, 'sistema']), [$auth, $superadmin]);
 $router->post('/superadmin/promover', $wrap([SuperAdminController::class, 'promover']), [$auth, $superadmin, $csrf]);
 $router->post('/superadmin/revogar', $wrap([SuperAdminController::class, 'revogar']), [$auth, $superadmin, $csrf]);
 
@@ -111,6 +112,7 @@ $router->post('/notificacoes/{id}/lida', $wrap([NotificacaoController::class, 'm
 $router->post('/notificacoes/lidas', $wrap([NotificacaoController::class, 'marcarTodas']), [$auth, $csrf]);
 
 $router->get('/webhooks', $wrap([WebhookController::class, 'index']), [$auth, $empresa, $rbac]);
+$router->get('/webhooks/entregas', $wrap([WebhookController::class, 'entregas']), [$auth, $empresa, $rbac]);
 $router->post('/webhooks', $wrap([WebhookController::class, 'salvar']), [$auth, $empresa, $rbac, $csrf]);
 $router->post('/webhooks/{id}/excluir', $wrap([WebhookController::class, 'excluir']), [$auth, $empresa, $rbac, $csrf]);
 

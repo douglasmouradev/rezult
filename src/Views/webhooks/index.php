@@ -1,5 +1,9 @@
 <?php require __DIR__ . '/../partials/flash.php'; ?>
-<div class="page-header"><h1>Webhooks</h1><p class="text-muted">Receba notificações HTTP com assinatura HMAC (header X-Rezult-Signature).</p></div>
+<div class="page-header">
+    <h1>Webhooks</h1>
+    <p class="text-muted">Receba notificações HTTP com assinatura HMAC (header X-Rezult-Signature).</p>
+    <a href="/webhooks/entregas" class="btn btn-ghost btn-sm">Ver entregas</a>
+</div>
 
 <form method="post" action="/webhooks" class="card mb-2">
     <input type="hidden" name="_csrf" value="<?= $csrf ?>">

@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Core\App;
+use App\Helpers\MailTemplate;
 
-/** Lembretes de vencimento e resumo semanal */
+/** Lembretes de vencimento, resumo semanal e avisos de plano */
 final class EmailJobService
 {
     public function __construct(private MailService $mail = new MailService()) {}
@@ -24,12 +25,15 @@ final class EmailJobService
         );
         $enviados = 0;
         foreach ($stmt->fetchAll() as $row) {
-            $this->mail->enviar(
-                $row['email'],
-                'Rezult — Vencimento hoje',
-                "Olá {$row['nome']},\n\nVence hoje: {$row['descricao']} — R$ {$row['valor']} ({$row['empresa_nome']})."
+            $tpl = MailTemplate::vencimento(
+                $row['nome'],
+                $row['descricao'],
+                number_format((float) $row['valor'], 2, ',', '.'),
+                $row['empresa_nome'],
             );
-            $enviados++;
+            if ($this->mail->enviarTemplate($row['email'], $tpl)) {
+                $enviados++;
+            }
         }
         return $enviados;
     }
@@ -53,13 +57,75 @@ final class EmailJobService
             );
             $tot->execute(['e' => $row['empresa_id']]);
             $t = $tot->fetch();
-            $this->mail->enviar(
-                $row['email'],
-                'Rezult — Resumo semanal',
-                "Resumo {$row['empresa_nome']}: Receitas R$ {$t['r']} | Despesas R$ {$t['d']}"
+            $tpl = MailTemplate::resumoSemanal(
+                $row['nome'],
+                $row['empresa_nome'],
+                number_format((float) $t['r'], 2, ',', '.'),
+                number_format((float) $t['d'], 2, ',', '.'),
             );
-            $enviados++;
+            if ($this->mail->enviarTemplate($row['email'], $tpl)) {
+                $enviados++;
+            }
         }
         return $enviados;
+    }
+
+    public function enviarAvisosPlano(): int
+    {
+        if (!$this->temColunaAviso()) {
+            return 0;
+        }
+
+        $enviados = 0;
+        $enviados += $this->avisarPlano(7, 'plano_aviso_7d_em');
+        $enviados += $this->avisarPlano(1, 'plano_aviso_1d_em');
+
+        return $enviados;
+    }
+
+    private function avisarPlano(int $dias, string $colunaAviso): int
+    {
+        $stmt = App::pdo()->prepare(
+            "SELECT e.id, e.nome, e.plano, e.plano_expira_em, u.email, u.nome AS usuario_nome
+             FROM empresas e
+             JOIN usuario_empresa ue ON ue.empresa_id = e.id AND ue.papel = 'dono'
+             JOIN usuarios u ON u.id = ue.usuario_id AND u.anonimizado = 0
+             WHERE e.ativo = 1 AND e.plano_ativo = 1
+             AND e.plano_expira_em IS NOT NULL
+             AND DATE(e.plano_expira_em) = DATE_ADD(CURDATE(), INTERVAL :d DAY)
+             AND e.{$colunaAviso} IS NULL"
+        );
+        $stmt->execute(['d' => $dias]);
+
+        $plan = new PlanService();
+        $enviados = 0;
+
+        foreach ($stmt->fetchAll() as $row) {
+            $dataExpira = date('d/m/Y', strtotime((string) $row['plano_expira_em']));
+            $tpl = MailTemplate::planoExpirando(
+                $row['usuario_nome'],
+                $row['nome'],
+                $plan->planoLabel($row['plano']),
+                $dataExpira,
+                $dias,
+            );
+            if ($this->mail->enviarTemplate($row['email'], $tpl)) {
+                App::pdo()->prepare("UPDATE empresas SET {$colunaAviso} = NOW() WHERE id = :id")
+                    ->execute(['id' => $row['id']]);
+                $enviados++;
+            }
+        }
+
+        return $enviados;
+    }
+
+    private function temColunaAviso(): bool
+    {
+        try {
+            $stmt = App::pdo()->query("SHOW COLUMNS FROM empresas LIKE 'plano_aviso_7d_em'");
+            return (bool) $stmt->fetch();
+        } catch (\Throwable) {
+            return false;
+        }
     }
 }

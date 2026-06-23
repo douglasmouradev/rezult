@@ -12,6 +12,7 @@ use App\Models\Empresa;
 use App\Policies\TenantPolicy;
 use App\Services\AuthService;
 use App\Services\AuditoriaService;
+use App\Helpers\MailTemplate;
 use App\Services\MailService;
 use App\Services\PlanService;
 
@@ -126,7 +127,9 @@ final class EmpresaController
         ]);
 
         $link = \App\Core\App::config('url') . "/convite/{$token}";
-        $this->mail->enviar($email, 'Convite Rezult', "Você foi convidado. Acesse: {$link}");
+        $empresa = $this->model->find($id);
+        $tpl = MailTemplate::convite($empresa['nome'] ?? 'sua empresa', $link);
+        $this->mail->enviarTemplate($email, $tpl);
         AuditoriaService::registrar('convite_enviado', 'empresa', $id, ['email' => $email]);
 
         Session::flash('success', 'Convite enviado!');

@@ -5,6 +5,7 @@ $tabs = [
     ['/superadmin/usuarios', 'users', 'Usuários'],
     ['/superadmin/empresas', 'storefront', 'Lojas'],
     ['/superadmin/logins', 'sign-in', 'Logins'],
+    ['/superadmin/sistema', 'wrench', 'Sistema'],
 ];
 $tabAtivo = fn (string $path): bool => $path === '/superadmin'
     ? $current === '/superadmin'

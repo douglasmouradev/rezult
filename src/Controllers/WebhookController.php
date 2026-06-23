@@ -9,6 +9,7 @@ use App\Core\View;
 use App\Helpers\Sanitize;
 use App\Helpers\Session;
 use App\Policies\TenantPolicy;
+use App\Services\WebhookService;
 
 final class WebhookController
 {
@@ -75,5 +76,17 @@ final class WebhookController
             ->execute(['id' => $id, 'e' => TenantPolicy::empresaId()]);
         Session::flash('success', 'Webhook removido.');
         View::redirect('/webhooks');
+    }
+
+    public function entregas(): void
+    {
+        TenantPolicy::abortUnlessCanManageConfig();
+        $eid = TenantPolicy::empresaId();
+        $svc = new WebhookService();
+
+        View::render('webhooks/entregas', [
+            'title' => 'Entregas de Webhook',
+            'entregas' => $svc->listarEntregas($eid, 100),
+        ]);
     }
 }

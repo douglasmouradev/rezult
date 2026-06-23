@@ -16,6 +16,51 @@ final class Logger
         self::write('INFO', $message, $context);
     }
 
+    /** @return list<string> */
+    public static function tail(int $lines = 200): array
+    {
+        $file = App::basePath() . '/storage/logs/app.log';
+        if (!is_file($file)) {
+            return [];
+        }
+
+        $lines = max(10, min(1000, $lines));
+        $fp = fopen($file, 'rb');
+        if (!$fp) {
+            return [];
+        }
+
+        fseek($fp, 0, SEEK_END);
+        $pos = ftell($fp);
+        $buffer = '';
+        $collected = [];
+
+        while ($pos > 0 && count($collected) < $lines) {
+            $chunk = min(4096, $pos);
+            $pos -= $chunk;
+            fseek($fp, $pos);
+            $buffer = fread($fp, $chunk) . $buffer;
+            $parts = explode("\n", $buffer);
+            $buffer = array_shift($parts) ?? '';
+            foreach (array_reverse($parts) as $line) {
+                if ($line !== '') {
+                    array_unshift($collected, $line);
+                    if (count($collected) >= $lines) {
+                        break;
+                    }
+                }
+            }
+        }
+
+        if ($buffer !== '' && count($collected) < $lines) {
+            array_unshift($collected, $buffer);
+        }
+
+        fclose($fp);
+
+        return array_slice($collected, -$lines);
+    }
+
     private static function write(string $level, string $message, array $context): void
     {
         $dir = App::basePath() . '/storage/logs';
