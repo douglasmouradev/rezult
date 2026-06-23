@@ -79,4 +79,26 @@ final class RelatorioController
             'tipo' => $tipo,
         ]);
     }
+
+    public function centroCusto(): void
+    {
+        $eid = (int) Session::get('empresa_id');
+        $p = $this->periodo();
+        $tipo = $_GET['tipo'] ?? 'despesa';
+        $dados = $this->service->porCentroCusto($eid, $p['de'], $p['ate'], $tipo);
+        if (($_GET['formato'] ?? '') === 'xlsx') {
+            $this->export->excelGenerico(
+                'Por centro de custo',
+                ['Tipo' => $tipo, 'Período' => $p['de'] . ' a ' . $p['ate']],
+                $dados,
+                'centro-custo'
+            );
+        }
+        View::render('relatorios/centro-custo', [
+            'title' => 'Por centro de custo',
+            'dados' => $dados,
+            'periodo' => $p,
+            'tipo' => $tipo,
+        ]);
+    }
 }

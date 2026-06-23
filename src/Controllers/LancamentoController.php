@@ -39,11 +39,17 @@ final class LancamentoController
             'status' => $_GET['status'] ?? '',
             'conta_id' => $_GET['conta_id'] ?? '',
             'categoria_id' => $_GET['categoria_id'] ?? '',
+            'centro_custo_id' => $_GET['centro_custo_id'] ?? '',
             'de' => $_GET['de'] ?? '',
             'ate' => $_GET['ate'] ?? '',
             'busca' => $_GET['busca'] ?? '',
             'tag' => $_GET['tag'] ?? '',
         ];
+
+        $centrosStmt = \App\Core\App::pdo()->prepare(
+            'SELECT id, nome, codigo FROM centros_custo WHERE empresa_id = :e AND ativo = 1 ORDER BY nome'
+        );
+        $centrosStmt->execute(['e' => $eid]);
 
         View::render('lancamentos/index', [
             'title' => 'Lançamentos',
@@ -51,6 +57,7 @@ final class LancamentoController
             'filtros' => $filtros,
             'contas' => $this->contas->findAll($eid, 'nome ASC'),
             'categorias' => $this->categorias->findAll($eid, 'nome ASC'),
+            'centrosCusto' => $centrosStmt->fetchAll(),
         ]);
     }
 
@@ -67,12 +74,17 @@ final class LancamentoController
     private function formView(?array $lancamento): void
     {
         $eid = $this->empresaId();
+        $centrosStmt = \App\Core\App::pdo()->prepare(
+            'SELECT id, nome, codigo FROM centros_custo WHERE empresa_id = :e AND ativo = 1 ORDER BY nome'
+        );
+        $centrosStmt->execute(['e' => $eid]);
         View::render('lancamentos/form', [
             'title' => $lancamento ? 'Editar lançamento' : 'Novo lançamento',
             'lancamento' => $lancamento,
             'contas' => $this->contas->findAll($eid, 'nome ASC'),
             'categorias' => $this->categorias->findAll($eid, 'nome ASC'),
             'metas' => $this->metas->findAll($eid, 'descricao ASC'),
+            'centrosCusto' => $centrosStmt->fetchAll(),
         ]);
     }
 

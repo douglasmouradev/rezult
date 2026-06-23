@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\Core\App;
 use App\Core\Logger;
+use App\Services\AutomacaoService;
 
 /** Gera próximas parcelas de lançamentos recorrentes */
 final class RecorrenciaService
@@ -42,14 +43,15 @@ final class RecorrenciaService
         $pdo->beginTransaction();
         try {
             $ins = $pdo->prepare(
-                'INSERT INTO lancamentos (empresa_id, conta_id, categoria_id, meta_id, tipo, descricao, valor,
+                'INSERT INTO lancamentos (empresa_id, conta_id, categoria_id, centro_custo_id, meta_id, tipo, descricao, valor,
                  data_lancamento, data_vencimento, status, recorrente, frequencia, observacoes, tags)
-                 VALUES (:e,:c,:cat,:m,:t,:d,:v,:dl,:dv,:st,0,NULL,:obs,:tags)'
+                 VALUES (:e,:c,:cat,:cc,:m,:t,:d,:v,:dl,:dv,:st,0,NULL,:obs,:tags)'
             );
             $ins->execute([
                 'e' => $base['empresa_id'],
                 'c' => $base['conta_id'],
                 'cat' => $base['categoria_id'],
+                'cc' => $base['centro_custo_id'] ?? null,
                 'm' => $base['meta_id'],
                 't' => $base['tipo'],
                 'd' => $base['descricao'],
@@ -67,6 +69,7 @@ final class RecorrenciaService
                 'id' => $base['id'],
             ]);
             $pdo->commit();
+            (new AutomacaoService())->aplicarGatilho((int) $base['empresa_id'], 'recorrente');
             return true;
         } catch (\Throwable $e) {
             $pdo->rollBack();

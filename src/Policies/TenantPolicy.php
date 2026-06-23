@@ -76,6 +76,15 @@ final class TenantPolicy
         return (new Meta())->find($metaId, $empresaId) !== null;
     }
 
+    public static function centroCustoDaEmpresa(int $centroCustoId, int $empresaId): bool
+    {
+        $stmt = \App\Core\App::pdo()->prepare(
+            'SELECT 1 FROM centros_custo WHERE id = :id AND empresa_id = :e AND ativo = 1 LIMIT 1'
+        );
+        $stmt->execute(['id' => $centroCustoId, 'e' => $empresaId]);
+        return (bool) $stmt->fetchColumn();
+    }
+
     public static function abortUnlessCanDeleteLancamento(): void
     {
         if (!self::papel(self::empresaId())?->podeExcluirLancamento()) {

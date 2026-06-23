@@ -18,6 +18,7 @@ $d = $dados;
             ['receita', 'Receitas do mês', $d['receitas_mes'], 'arrow-up-right', null],
             ['despesa', 'Despesas do mês', $d['despesas_mes'], 'arrow-down-right', null],
             ['resultado', 'Resultado', $d['resultado_mes'], 'scales', $resultadoHint],
+            ['inadimplencia', 'Inadimplência', $d['inadimplencia_valor'] ?? 0, 'warning', ($d['inadimplencia_qtd'] ?? 0) . ' título(s) · ' . ($d['inadimplencia_pct'] ?? 0) . '%'],
         ] as [$variant, $label, $value, $icon, $hint]
     ) {
         require __DIR__ . '/../partials/stat-card.php';

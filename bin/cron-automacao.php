@@ -8,4 +8,5 @@ require dirname(__DIR__) . '/vendor/autoload.php';
 \App\Core\App::boot();
 
 $n = (new \App\Services\AutomacaoService())->processarVencimentos();
-echo date('c') . " — automações de vencimento: {$n}\n";
+$v = (new \App\Services\CobrancaService())->marcarVencidas();
+echo date('c') . " — automações de vencimento: {$n}, cobranças vencidas: {$v}\n";

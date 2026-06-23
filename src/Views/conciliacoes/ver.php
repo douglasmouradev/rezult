@@ -1,13 +1,22 @@
 <?php use App\Helpers\Money; require __DIR__ . '/../partials/flash.php'; ?>
 <div class="card"><p>Conciliação #<?= $conciliacao['id'] ?> — <?= (int)$conciliacao['conciliados'] ?>/<?= (int)$conciliacao['total_itens'] ?> conciliados</p>
-<table><thead><tr><th>Data</th><th>Descrição</th><th>Valor</th><th>Status</th><th>Lançamento</th></tr></thead><tbody>
+<table><thead><tr><th>Data</th><th>Descrição</th><th>Valor</th><th>Status</th><th>Ações</th></tr></thead><tbody>
 <?php foreach ($itens as $i): ?>
 <tr><td><?= date('d/m/Y', strtotime($i['data_movimento'])) ?></td><td><?= htmlspecialchars($i['descricao']) ?></td>
 <td><?= Money::format((float)$i['valor']) ?></td><td><?= $i['status'] ?></td>
 <td><?php if ($i['status']==='pendente'): ?>
+<div style="display:flex;flex-direction:column;gap:6px">
 <form method="post" action="/conciliacoes/<?= $conciliacao['id'] ?>/conciliar"><input type="hidden" name="_csrf" value="<?= $csrf ?>">
 <input type="hidden" name="item_id" value="<?= $i['id'] ?>">
 <select name="lancamento_id"><?php foreach($lancamentos as $l): ?><option value="<?= $l['id'] ?>"><?= htmlspecialchars($l['descricao']) ?> — <?= Money::format((float)$l['valor']) ?></option><?php endforeach; ?></select>
 <button class="btn-sm btn-primary">Conciliar</button></form>
-<?php else: ?><?= htmlspecialchars($i['lancamento_descricao'] ?? '—') ?><?php endif; ?></td></tr>
+<form method="post" action="/conciliacoes/<?= $conciliacao['id'] ?>/criar-lancamento"><input type="hidden" name="_csrf" value="<?= $csrf ?>">
+<input type="hidden" name="item_id" value="<?= $i['id'] ?>">
+<select name="categoria_id"><option value="">Sem categoria</option><?php foreach($categorias as $cat): ?><option value="<?= $cat['id'] ?>"><?= htmlspecialchars($cat['nome']) ?></option><?php endforeach; ?></select>
+<button class="btn-sm btn-ghost">Criar lançamento</button></form>
+<form method="post" action="/conciliacoes/<?= $conciliacao['id'] ?>/ignorar"><input type="hidden" name="_csrf" value="<?= $csrf ?>">
+<input type="hidden" name="item_id" value="<?= $i['id'] ?>">
+<button class="btn-sm btn-ghost">Ignorar</button></form>
+</div>
+<?php else: ?><?= htmlspecialchars($i['lancamento_descricao'] ?? ($i['status'] === 'ignorado' ? 'Ignorado' : '—')) ?><?php endif; ?></td></tr>
 <?php endforeach; ?></tbody></table></div>

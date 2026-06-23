@@ -18,7 +18,7 @@
 <?php endif; ?>
 <div class="card table-card">
 <table class="data-table">
-<thead><tr><th>Categoria</th><th>Planejado</th><th>Realizado</th><th>%</th></tr></thead>
+<thead><tr><th>Categoria</th><th>Planejado</th><th>Realizado</th><th>%</th><?php if ($podeGerenciar): ?><th></th><?php endif; ?></tr></thead>
 <tbody>
 <?php foreach ($itens as $i):
     $pct = $i['valor_planejado'] > 0 ? round(((float)$i['realizado'] / (float)$i['valor_planejado']) * 100) : 0;
@@ -28,6 +28,14 @@
     <td>R$ <?= number_format((float)$i['valor_planejado'], 2, ',', '.') ?></td>
     <td>R$ <?= number_format((float)$i['realizado'], 2, ',', '.') ?></td>
     <td><?= $pct ?>%</td>
+    <?php if ($podeGerenciar): ?>
+    <td>
+        <form method="post" action="/orcamentos/<?= (int)$i['id'] ?>/excluir" data-confirm="Remover esta linha?">
+            <input type="hidden" name="_csrf" value="<?= $csrf ?>">
+            <button type="submit" class="btn-ghost btn-sm">Excluir</button>
+        </form>
+    </td>
+    <?php endif; ?>
 </tr>
 <?php endforeach; ?>
 </tbody>

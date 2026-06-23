@@ -43,11 +43,17 @@ final class LancamentoService
             throw new \InvalidArgumentException('Meta inválida.');
         }
 
+        $centroCustoId = !empty($input['centro_custo_id']) ? (int) $input['centro_custo_id'] : null;
+        if ($centroCustoId && !TenantPolicy::centroCustoDaEmpresa($centroCustoId, $empresaId)) {
+            throw new \InvalidArgumentException('Centro de custo inválido.');
+        }
+
         $tags = array_filter(array_map('trim', explode(',', Sanitize::raw($input['tags'] ?? ''))));
         $data = [
             'empresa_id' => $empresaId,
             'conta_id' => $contaId,
             'categoria_id' => $categoriaId,
+            'centro_custo_id' => $centroCustoId,
             'meta_id' => $metaId,
             'tipo' => $input['tipo'],
             'descricao' => Sanitize::raw($input['descricao']),

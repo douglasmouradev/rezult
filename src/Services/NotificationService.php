@@ -26,6 +26,17 @@ final class NotificationService
         return $stmt->fetchAll();
     }
 
+    public function listarTodas(int $usuarioId, int $limit = 50): array
+    {
+        $stmt = App::pdo()->prepare(
+            'SELECT * FROM notificacoes WHERE usuario_id = :u ORDER BY criado_em DESC LIMIT :l'
+        );
+        $stmt->bindValue(':u', $usuarioId, \PDO::PARAM_INT);
+        $stmt->bindValue(':l', $limit, \PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
+
     public function contarNaoLidas(int $usuarioId): int
     {
         $stmt = App::pdo()->prepare('SELECT COUNT(*) FROM notificacoes WHERE usuario_id = :u AND lida = 0');

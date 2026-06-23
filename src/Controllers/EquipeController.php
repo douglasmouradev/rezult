@@ -53,4 +53,35 @@ final class EquipeController
         Session::flash('success', 'Membro removido.');
         View::redirect('/equipe');
     }
+
+    public function alterarPapel(int $usuarioId): void
+    {
+        $eid = TenantPolicy::empresaId();
+        TenantPolicy::abortUnlessCanManageConfig($eid);
+        $papel = $_POST['papel'] ?? '';
+        if (!in_array($papel, ['admin', 'operador'], true)) {
+            Session::flash('error', 'Papel inválido.');
+            View::redirect('/equipe');
+        }
+        if ($usuarioId === TenantPolicy::usuarioId()) {
+            Session::flash('error', 'Você não pode alterar seu próprio papel.');
+            View::redirect('/equipe');
+        }
+        App::pdo()->prepare(
+            'UPDATE usuario_empresa SET papel = :p WHERE empresa_id = :e AND usuario_id = :u AND papel != :d'
+        )->execute(['p' => $papel, 'e' => $eid, 'u' => $usuarioId, 'd' => 'dono']);
+        Session::flash('success', 'Papel atualizado.');
+        View::redirect('/equipe');
+    }
+
+    public function cancelarConvite(int $conviteId): void
+    {
+        $eid = TenantPolicy::empresaId();
+        TenantPolicy::abortUnlessCanManageConfig($eid);
+        App::pdo()->prepare(
+            'DELETE FROM convites WHERE id = :id AND empresa_id = :e AND aceito_em IS NULL'
+        )->execute(['id' => $conviteId, 'e' => $eid]);
+        Session::flash('success', 'Convite cancelado.');
+        View::redirect('/equipe');
+    }
 }

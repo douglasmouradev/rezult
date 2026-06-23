@@ -85,12 +85,18 @@ final class DashboardService
 
         $ultimos = $this->lancamentos->listarFiltrado($empresaId, [], 1, 8);
         $vencendo = $this->lancamentos->vencendoEm($empresaId);
+        $inadimplencia = $this->lancamentos->resumoFluxo($empresaId, 'receita');
 
         $data = [
             'saldo_total' => $saldoTotal,
             'receitas_mes' => (float) $mes['receitas'],
             'despesas_mes' => (float) $mes['despesas'],
             'resultado_mes' => (float) $mes['receitas'] - (float) $mes['despesas'],
+            'inadimplencia_valor' => (float) ($inadimplencia['total_atrasado'] ?? 0),
+            'inadimplencia_qtd' => (int) ($inadimplencia['qtd_atrasado'] ?? 0),
+            'inadimplencia_pct' => ($inadimplencia['total_pendente'] ?? 0) > 0
+                ? round(((float) $inadimplencia['total_atrasado'] / (float) $inadimplencia['total_pendente']) * 100, 1)
+                : 0.0,
             'fluxo_12m' => $fluxo,
             'despesas_categoria' => $despesasCat,
             'comparativo_mensal' => $comparativo,

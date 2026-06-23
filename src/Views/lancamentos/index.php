@@ -43,6 +43,26 @@ $r = $resultado;
         </select>
     </div>
     <div class="filter-label">
+        <span>Categoria</span>
+        <select name="categoria_id"><option value="">Todas</option>
+            <?php foreach ($categorias as $c): ?>
+            <option value="<?= $c['id'] ?>" <?= ($filtros['categoria_id']??'')==$c['id']?'selected':'' ?>><?= htmlspecialchars($c['nome']) ?></option>
+            <?php endforeach; ?>
+        </select>
+    </div>
+    <div class="filter-label">
+        <span>Centro de custo</span>
+        <select name="centro_custo_id"><option value="">Todos</option>
+            <?php foreach ($centrosCusto ?? [] as $cc): ?>
+            <option value="<?= $cc['id'] ?>" <?= ($filtros['centro_custo_id']??'')==$cc['id']?'selected':'' ?>><?= htmlspecialchars($cc['nome']) ?></option>
+            <?php endforeach; ?>
+        </select>
+    </div>
+    <div class="filter-label">
+        <span>Tag</span>
+        <input class="input" name="tag" placeholder="Tag..." value="<?= htmlspecialchars($filtros['tag'] ?? '') ?>">
+    </div>
+    <div class="filter-label">
         <span>De</span>
         <input class="input" type="date" name="de" value="<?= $filtros['de'] ?>">
     </div>
@@ -61,6 +81,7 @@ $r = $resultado;
                     <th>Data</th>
                     <th>Descrição</th>
                     <th>Categoria</th>
+                    <th>Centro</th>
                     <th>Valor</th>
                     <th>Status</th>
                     <th class="th-actions">Ações</th>
@@ -69,7 +90,7 @@ $r = $resultado;
             <tbody>
             <?php if (empty($r['items'])): ?>
             <tr>
-                <td colspan="6">
+                <td colspan="7">
                     <div class="empty-state">
                         <i class="ph ph-magnifying-glass"></i>
                         <p>Nenhum lançamento encontrado.</p>
@@ -87,12 +108,16 @@ $r = $resultado;
                     <?php endif; ?>
                     <?= htmlspecialchars($l['categoria_nome'] ?? '—') ?>
                 </td>
+                <td class="td-muted"><?= htmlspecialchars($l['centro_custo_nome'] ?? '—') ?></td>
                 <td class="amount amount-<?= $l['tipo'] ?>"><?= Money::format((float)$l['valor']) ?></td>
                 <td>
                     <form method="post" action="/lancamentos/<?= $l['id'] ?>/status" class="toggle-status-form">
                         <input type="hidden" name="_csrf" value="<?= $csrf ?>">
                         <button type="submit" class="badge badge-<?= $l['status'] ?> badge-toggle toggle-status"><?= ucfirst($l['status']) ?></button>
                     </form>
+                    <?php if (!empty($l['aprovado_em'])): ?>
+                    <small class="td-muted" title="Aprovado">✓</small>
+                    <?php endif; ?>
                 </td>
                 <td>
                     <div class="row-actions">
@@ -107,6 +132,15 @@ $r = $resultado;
                                 <span class="btn-label">Copiar</span>
                             </button>
                         </form>
+                        <?php if (!empty($podeAprovar) && empty($l['aprovado_em'])): ?>
+                        <form method="post" action="/lancamentos/<?= $l['id'] ?>/aprovar" class="inline-form">
+                            <input type="hidden" name="_csrf" value="<?= $csrf ?>">
+                            <button type="submit" class="btn-ghost btn-sm btn-with-icon btn-action" title="Aprovar lançamento">
+                                <i class="ph ph-check-circle" aria-hidden="true"></i>
+                                <span class="btn-label">Aprovar</span>
+                            </button>
+                        </form>
+                        <?php endif; ?>
                         <?php if (!empty($podeGerenciar)): ?>
                         <form method="post" action="/lancamentos/<?= $l['id'] ?>/excluir" class="inline-form">
                             <input type="hidden" name="_csrf" value="<?= $csrf ?>">

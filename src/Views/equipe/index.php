@@ -12,7 +12,19 @@
             <tr>
                 <td><?= htmlspecialchars($m['nome']) ?></td>
                 <td><?= htmlspecialchars($m['email']) ?></td>
-                <td><?= htmlspecialchars(ucfirst($m['papel'])) ?></td>
+                <td>
+                    <?php if ($m['papel'] === 'dono' || (int)$m['id'] === (int)($_SESSION['usuario_id'] ?? 0)): ?>
+                    <?= htmlspecialchars(ucfirst($m['papel'])) ?>
+                    <?php else: ?>
+                    <form method="post" action="/equipe/<?= (int)$m['id'] ?>/papel" class="inline-form">
+                        <input type="hidden" name="_csrf" value="<?= $csrf ?>">
+                        <select name="papel" class="input btn-sm" onchange="this.form.submit()">
+                            <option value="admin" <?= $m['papel']==='admin'?'selected':'' ?>>Admin</option>
+                            <option value="operador" <?= $m['papel']==='operador'?'selected':'' ?>>Operador</option>
+                        </select>
+                    </form>
+                    <?php endif; ?>
+                </td>
                 <td>
                     <?php if ($m['papel'] !== 'dono' && (int)$m['id'] !== (int)($_SESSION['usuario_id'] ?? 0)): ?>
                     <form method="post" action="/equipe/<?= (int)$m['id'] ?>/remover" data-confirm="Remover este membro?">
@@ -33,7 +45,13 @@
         <?php else: ?>
         <ul class="list-plain">
             <?php foreach ($convites as $c): ?>
-            <li><?= htmlspecialchars($c['email']) ?> · <?= htmlspecialchars($c['papel']) ?> · expira <?= date('d/m/Y', strtotime($c['expira_em'])) ?></li>
+            <li style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+                <span><?= htmlspecialchars($c['email']) ?> · <?= htmlspecialchars($c['papel']) ?> · expira <?= date('d/m/Y', strtotime($c['expira_em'])) ?></span>
+                <form method="post" action="/equipe/convites/<?= (int)$c['id'] ?>/cancelar">
+                    <input type="hidden" name="_csrf" value="<?= $csrf ?>">
+                    <button type="submit" class="btn-ghost btn-sm">Cancelar</button>
+                </form>
+            </li>
             <?php endforeach; ?>
         </ul>
         <?php endif; ?>

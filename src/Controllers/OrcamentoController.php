@@ -51,4 +51,13 @@ final class OrcamentoController
         Session::flash('success', 'Orçamento salvo.');
         View::redirect('/orcamentos?mes=' . urlencode($_POST['mes']));
     }
+
+    public function excluir(int $id): void
+    {
+        TenantPolicy::abortUnlessCanManageConfig();
+        App::pdo()->prepare('DELETE FROM orcamentos WHERE id = :id AND empresa_id = :e')
+            ->execute(['id' => $id, 'e' => TenantPolicy::empresaId()]);
+        Session::flash('success', 'Linha de orçamento removida.');
+        View::redirect('/orcamentos?mes=' . urlencode($_GET['mes'] ?? date('Y-m')));
+    }
 }

@@ -28,6 +28,14 @@
             <?php endforeach; ?>
         </select>
     </div>
+    <div class="form-group"><label>Centro de custo</label>
+        <select name="centro_custo_id" class="input">
+            <option value="">—</option>
+            <?php foreach ($centrosCusto ?? [] as $cc): ?>
+            <option value="<?= $cc['id'] ?>" <?= ($l['centro_custo_id']??'')==$cc['id']?'selected':'' ?>><?= htmlspecialchars($cc['nome']) ?></option>
+            <?php endforeach; ?>
+        </select>
+    </div>
     <div class="form-group"><label>Meta</label>
         <select name="meta_id" class="input">
             <option value="">—</option>

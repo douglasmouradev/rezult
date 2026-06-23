@@ -15,7 +15,7 @@ final class CentroCustoController
     public function index(): void
     {
         $eid = TenantPolicy::empresaId();
-        $stmt = App::pdo()->prepare('SELECT * FROM centros_custo WHERE empresa_id = :e ORDER BY nome');
+        $stmt = App::pdo()->prepare('SELECT * FROM centros_custo WHERE empresa_id = :e AND ativo = 1 ORDER BY nome');
         $stmt->execute(['e' => $eid]);
         View::render('centros-custo/index', ['title' => 'Centros de custo', 'centros' => $stmt->fetchAll()]);
     }
@@ -32,6 +32,18 @@ final class CentroCustoController
                 ->execute(['e' => $eid, 'n' => $nome, 'c' => Sanitize::raw($_POST['codigo'] ?? '')]);
         }
         Session::flash('success', 'Centro de custo salvo.');
+        View::redirect('/centros-custo');
+    }
+
+    public function excluir(int $id): void
+    {
+        TenantPolicy::abortUnlessCanManageConfig();
+        $eid = TenantPolicy::empresaId();
+        App::pdo()->prepare('UPDATE lancamentos SET centro_custo_id = NULL WHERE centro_custo_id = :id AND empresa_id = :e')
+            ->execute(['id' => $id, 'e' => $eid]);
+        App::pdo()->prepare('UPDATE centros_custo SET ativo = 0 WHERE id = :id AND empresa_id = :e')
+            ->execute(['id' => $id, 'e' => $eid]);
+        Session::flash('success', 'Centro de custo removido.');
         View::redirect('/centros-custo');
     }
 }

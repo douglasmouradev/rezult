@@ -67,6 +67,21 @@ final class RelatorioService
         return $stmt->fetchAll();
     }
 
+    public function porCentroCusto(int $empresaId, string $de, string $ate, string $tipo = 'despesa'): array
+    {
+        $stmt = App::pdo()->prepare(
+            "SELECT COALESCE(cc.nome, 'Sem centro') AS nome, cc.codigo,
+                    SUM(l.valor) AS total, COUNT(*) AS qtd
+             FROM lancamentos l
+             LEFT JOIN centros_custo cc ON cc.id = l.centro_custo_id
+             WHERE l.empresa_id = :e AND l.tipo = :tipo AND l.status = 'pago'
+             AND l.data_lancamento BETWEEN :de AND :ate
+             GROUP BY cc.id ORDER BY total DESC"
+        );
+        $stmt->execute(['e' => $empresaId, 'de' => $de, 'ate' => $ate, 'tipo' => $tipo]);
+        return $stmt->fetchAll();
+    }
+
     public function porTag(int $empresaId, string $de, string $ate): array
     {
         $stmt = App::pdo()->prepare(

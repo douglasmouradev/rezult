@@ -47,4 +47,14 @@ final class ApiTokenController
         Session::set('api_token_plain', $plain);
         View::redirect('/api/tokens');
     }
+
+    public function revogar(int $id): void
+    {
+        TenantPolicy::abortUnlessCanManageConfig();
+        App::pdo()->prepare(
+            'DELETE FROM api_tokens WHERE id = :id AND empresa_id = :e AND usuario_id = :u'
+        )->execute(['id' => $id, 'e' => TenantPolicy::empresaId(), 'u' => TenantPolicy::usuarioId()]);
+        Session::flash('success', 'Token revogado.');
+        View::redirect('/api/tokens');
+    }
 }

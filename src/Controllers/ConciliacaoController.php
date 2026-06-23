@@ -59,6 +59,7 @@ final class ConciliacaoController
             'conciliacao' => $conc,
             'itens' => $this->model->itens($id),
             'lancamentos' => $this->lancamentos->listarFiltrado($eid, ['status' => 'pago'], 1, 100)['items'],
+            'categorias' => (new \App\Models\Categoria())->findAll($eid, 'nome ASC'),
         ]);
     }
 
@@ -71,6 +72,26 @@ final class ConciliacaoController
             $id
         );
         Session::flash('success', 'Item conciliado.');
+        View::redirect('/conciliacoes/' . $id);
+    }
+
+    public function ignorar(int $id): void
+    {
+        $this->service->ignorarItem((int) $_POST['item_id'], $this->eid(), $id);
+        Session::flash('success', 'Item ignorado.');
+        View::redirect('/conciliacoes/' . $id);
+    }
+
+    public function criarLancamento(int $id): void
+    {
+        $eid = $this->eid();
+        $lancId = $this->service->criarLancamentoDoItem(
+            (int) $_POST['item_id'],
+            $eid,
+            $id,
+            (int) ($_POST['categoria_id'] ?? 0) ?: null
+        );
+        Session::flash('success', $lancId ? 'Lançamento criado e conciliado.' : 'Não foi possível criar o lançamento.');
         View::redirect('/conciliacoes/' . $id);
     }
 }

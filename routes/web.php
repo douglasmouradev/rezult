@@ -85,12 +85,15 @@ $router->post('/notificacoes/lidas', $wrap([NotificacaoController::class, 'marca
 
 $router->get('/api/tokens', $wrap([ApiTokenController::class, 'index']), [$auth, $empresa, $rbac]);
 $router->post('/api/tokens', $wrap([ApiTokenController::class, 'criar']), [$auth, $empresa, $rbac, $csrf]);
+$router->post('/api/tokens/{id}/revogar', $wrap([ApiTokenController::class, 'revogar']), [$auth, $empresa, $rbac, $csrf]);
 
 $router->get('/orcamentos', $wrap([OrcamentoController::class, 'index']), [$auth, $empresa]);
 $router->post('/orcamentos', $wrap([OrcamentoController::class, 'salvar']), [$auth, $empresa, $rbac, $csrf]);
+$router->post('/orcamentos/{id}/excluir', $wrap([OrcamentoController::class, 'excluir']), [$auth, $empresa, $rbac, $csrf]);
 
 $router->get('/centros-custo', $wrap([CentroCustoController::class, 'index']), [$auth, $empresa, $rbac]);
 $router->post('/centros-custo', $wrap([CentroCustoController::class, 'salvar']), [$auth, $empresa, $rbac, $csrf]);
+$router->post('/centros-custo/{id}/excluir', $wrap([CentroCustoController::class, 'excluir']), [$auth, $empresa, $rbac, $csrf]);
 
 $router->get('/empresas', $wrap([EmpresaController::class, 'index']), [$auth]);
 $router->get('/empresas/criar', $wrap([EmpresaController::class, 'criarForm']), [$auth]);
@@ -102,6 +105,8 @@ $router->post('/empresas/{id}/convidar', $wrap([EmpresaController::class, 'convi
 
 $router->get('/equipe', $wrap([EquipeController::class, 'index']), [$auth, $empresa, $rbac]);
 $router->post('/equipe/{id}/remover', $wrap([EquipeController::class, 'remover']), [$auth, $empresa, $rbac, $csrf]);
+$router->post('/equipe/{id}/papel', $wrap([EquipeController::class, 'alterarPapel']), [$auth, $empresa, $rbac, $csrf]);
+$router->post('/equipe/convites/{id}/cancelar', $wrap([EquipeController::class, 'cancelarConvite']), [$auth, $empresa, $rbac, $csrf]);
 
 $router->get('/auditoria', $wrap([AuditoriaController::class, 'index']), [$auth, $empresa, $rbac]);
 
@@ -130,6 +135,8 @@ $router->get('/cobrancas/{id}/editar', $wrap([CobrancaController::class, 'editar
 $router->post('/cobrancas', $wrap([CobrancaController::class, 'salvar']), [$auth, $empresa, $csrf]);
 $router->post('/cobrancas/{id}/emitir', $wrap([CobrancaController::class, 'emitir']), [$auth, $empresa, $csrf]);
 $router->post('/cobrancas/{id}/pagar', $wrap([CobrancaController::class, 'marcarPaga']), [$auth, $empresa, $csrf]);
+$router->post('/cobrancas/{id}/cancelar', $wrap([CobrancaController::class, 'cancelar']), [$auth, $empresa, $csrf]);
+$router->post('/cobrancas/{id}/enviar-email', $wrap([CobrancaController::class, 'enviarEmail']), [$auth, $empresa, $csrf]);
 
 $router->get('/notas-fiscais', $wrap([NotaFiscalController::class, 'index']), [$auth, $empresa]);
 $router->get('/notas-fiscais/criar', $wrap([NotaFiscalController::class, 'criarForm']), [$auth, $empresa]);
@@ -147,6 +154,8 @@ $router->get('/conciliacoes', $wrap([ConciliacaoController::class, 'index']), [$
 $router->post('/conciliacoes/importar', $wrap([ConciliacaoController::class, 'importar']), [$auth, $empresa, $csrf]);
 $router->get('/conciliacoes/{id}', $wrap([ConciliacaoController::class, 'ver']), [$auth, $empresa]);
 $router->post('/conciliacoes/{id}/conciliar', $wrap([ConciliacaoController::class, 'conciliar']), [$auth, $empresa, $csrf]);
+$router->post('/conciliacoes/{id}/ignorar', $wrap([ConciliacaoController::class, 'ignorar']), [$auth, $empresa, $csrf]);
+$router->post('/conciliacoes/{id}/criar-lancamento', $wrap([ConciliacaoController::class, 'criarLancamento']), [$auth, $empresa, $csrf]);
 
 $router->get('/assistente', $wrap([AssistenteController::class, 'index']), [$auth, $empresa]);
 $router->post('/assistente/perguntar', $wrap([AssistenteController::class, 'perguntar']), [$auth, $empresa, $csrf]);
@@ -168,6 +177,7 @@ $router->get('/lancamentos/template-csv', $wrap([LancamentoController::class, 't
 $router->get('/relatorios/dre', $wrap([RelatorioController::class, 'dre']), [$auth, $empresa]);
 $router->get('/relatorios/fluxo', $wrap([RelatorioController::class, 'fluxo']), [$auth, $empresa]);
 $router->get('/relatorios/categoria', $wrap([RelatorioController::class, 'categoria']), [$auth, $empresa]);
+$router->get('/relatorios/centro-custo', $wrap([RelatorioController::class, 'centroCusto']), [$auth, $empresa]);
 
 $router->get('/metas', $wrap([MetaController::class, 'index']), [$auth, $empresa]);
 $router->post('/metas', $wrap([MetaController::class, 'salvar']), [$auth, $empresa, $rbac, $csrf]);

@@ -29,6 +29,10 @@ final class Lancamento extends BaseModel
             $where[] = 'l.categoria_id = :categoria_id';
             $params['categoria_id'] = $filtros['categoria_id'];
         }
+        if (!empty($filtros['centro_custo_id'])) {
+            $where[] = 'l.centro_custo_id = :centro_custo_id';
+            $params['centro_custo_id'] = $filtros['centro_custo_id'];
+        }
         if (!empty($filtros['de'])) {
             $where[] = 'l.data_lancamento >= :de';
             $params['de'] = $filtros['de'];
@@ -70,10 +74,12 @@ final class Lancamento extends BaseModel
         $countStmt->execute($params);
         $total = (int) $countStmt->fetchColumn();
 
-        $sql = "SELECT l.*, c.nome AS conta_nome, cat.nome AS categoria_nome, cat.cor AS categoria_cor
+        $sql = "SELECT l.*, c.nome AS conta_nome, cat.nome AS categoria_nome, cat.cor AS categoria_cor,
+                       cc.nome AS centro_custo_nome
                 FROM lancamentos l
                 LEFT JOIN contas c ON c.id = l.conta_id
                 LEFT JOIN categorias cat ON cat.id = l.categoria_id
+                LEFT JOIN centros_custo cc ON cc.id = l.centro_custo_id
                 WHERE {$whereSql}
                 ORDER BY {$orderBy}
                 LIMIT {$perPage} OFFSET {$offset}";

@@ -14,9 +14,13 @@ final class NotificacaoController
 
     public function index(): void
     {
+        $todas = ($_GET['filtro'] ?? '') === 'todas';
         View::render('notificacoes/index', [
             'title' => 'Notificações',
-            'notificacoes' => $this->notif->listarNaoLidas(TenantPolicy::usuarioId(), 50),
+            'notificacoes' => $todas
+                ? $this->notif->listarTodas(TenantPolicy::usuarioId(), 100)
+                : $this->notif->listarNaoLidas(TenantPolicy::usuarioId(), 50),
+            'filtroTodas' => $todas,
         ]);
     }
 

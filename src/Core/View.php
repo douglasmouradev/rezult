@@ -21,6 +21,7 @@ final class View
         $appUrl = App::config('url');
         $empresaId = (int) Session::get('empresa_id');
         $podeGerenciar = $empresaId > 0 && \App\Policies\TenantPolicy::podeGerenciarConfig($empresaId);
+        $podeAprovar = $empresaId > 0 && (\App\Policies\TenantPolicy::papel($empresaId)?->podeAprovarLancamento() ?? false);
         $notifCount = 0;
         if ($usuario) {
             try {

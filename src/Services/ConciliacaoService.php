@@ -85,6 +85,7 @@ final class ConciliacaoService
         ], $empresaId);
 
         AuditoriaService::registrar('conciliacao_importada', 'conciliacao', $concId);
+        (new AutomacaoService())->aplicarGatilho($empresaId, 'import_csv');
         return $concId;
     }
 
@@ -103,6 +104,52 @@ final class ConciliacaoService
             ->execute(['l' => $lancamentoId, 'e' => $empresaId]);
 
         $this->atualizarTotais($conciliacaoId, $empresaId);
+    }
+
+    public function ignorarItem(int $itemId, int $empresaId, int $conciliacaoId): void
+    {
+        $conc = $this->model->find($conciliacaoId, $empresaId);
+        if (!$conc) {
+            TenantPolicy::forbidden();
+        }
+        App::pdo()->prepare(
+            'UPDATE conciliacao_itens SET status = \'ignorado\' WHERE id = :i AND conciliacao_id = :c'
+        )->execute(['i' => $itemId, 'c' => $conciliacaoId]);
+        $this->atualizarTotais($conciliacaoId, $empresaId);
+    }
+
+    public function criarLancamentoDoItem(int $itemId, int $empresaId, int $conciliacaoId, ?int $categoriaId): ?int
+    {
+        $conc = $this->model->find($conciliacaoId, $empresaId);
+        if (!$conc) {
+            TenantPolicy::forbidden();
+        }
+        $stmt = App::pdo()->prepare('SELECT * FROM conciliacao_itens WHERE id = :i AND conciliacao_id = :c AND status = \'pendente\'');
+        $stmt->execute(['i' => $itemId, 'c' => $conciliacaoId]);
+        $item = $stmt->fetch();
+        if (!$item) {
+            return null;
+        }
+
+        $tipo = $item['tipo_movimento'] === 'credito' ? 'receita' : 'despesa';
+        $lancId = $this->lancamentos->save([
+            'empresa_id' => $empresaId,
+            'conta_id' => (int) $conc['conta_id'],
+            'categoria_id' => $categoriaId,
+            'tipo' => $tipo,
+            'descricao' => $item['descricao'],
+            'valor' => (float) $item['valor'],
+            'data_lancamento' => $item['data_movimento'],
+            'status' => 'pago',
+            'conciliado_em' => date('Y-m-d H:i:s'),
+        ], $empresaId);
+
+        App::pdo()->prepare(
+            'UPDATE conciliacao_itens SET lancamento_id = :l, status = \'conciliado\' WHERE id = :i'
+        )->execute(['l' => $lancId, 'i' => $itemId]);
+        $this->atualizarTotais($conciliacaoId, $empresaId);
+        $this->lancamentos->invalidarCacheDashboard($empresaId);
+        return $lancId;
     }
 
     private function buscarLancamento(int $empresaId, int $contaId, string $data, float $valor, string $tipo): ?int

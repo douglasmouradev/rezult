@@ -72,6 +72,43 @@ final class CobrancaService
         AuditoriaService::registrar('cobranca_emitida', 'cobranca', $id);
     }
 
+    public function cancelar(int $id, int $empresaId): void
+    {
+        $c = $this->model->find($id, $empresaId);
+        if (!$c || in_array($c['status'], ['paga', 'cancelada'], true)) {
+            return;
+        }
+        $this->model->save(['id' => $id, 'status' => 'cancelada'], $empresaId);
+        if (!empty($c['lancamento_id'])) {
+            $lanc = $this->lancamentos->find((int) $c['lancamento_id'], $empresaId);
+            if ($lanc && $lanc['status'] === 'pendente') {
+                $this->lancamentos->save(['id' => (int) $c['lancamento_id'], 'status' => 'cancelado'], $empresaId);
+            }
+        }
+        AuditoriaService::registrar('cobranca_cancelada', 'cobranca', $id);
+    }
+
+    public function enviarEmail(int $id, int $empresaId): bool
+    {
+        $c = $this->model->find($id, $empresaId);
+        if (!$c || empty($c['cliente_email']) || $c['status'] === 'cancelada') {
+            return false;
+        }
+        $valor = number_format((float) $c['valor'], 2, ',', '.');
+        $corpo = "Olá {$c['cliente_nome']},\n\n";
+        $corpo .= "Segue sua cobrança: {$c['descricao']}\n";
+        $corpo .= "Valor: R$ {$valor}\n";
+        $corpo .= "Vencimento: " . date('d/m/Y', strtotime($c['vencimento'])) . "\n\n";
+        if (!empty($c['codigo_pix'])) {
+            $corpo .= "Pix copia e cola:\n{$c['codigo_pix']}\n\n";
+        }
+        if (!empty($c['linha_digitavel'])) {
+            $corpo .= "Boleto: {$c['linha_digitavel']}\n\n";
+        }
+        $corpo .= "— Enviado pelo Rezult";
+        return (new MailService())->enviar($c['cliente_email'], 'Cobrança: ' . $c['descricao'], $corpo);
+    }
+
     public function marcarPaga(int $id, int $empresaId): void
     {
         $c = $this->model->find($id, $empresaId);
@@ -113,5 +150,14 @@ final class CobrancaService
         $stmt = \App\Core\App::pdo()->prepare('SELECT id FROM contas WHERE empresa_id = :e LIMIT 1');
         $stmt->execute(['e' => $empresaId]);
         return (int) ($stmt->fetchColumn() ?: 0);
+    }
+
+    public function marcarVencidas(): int
+    {
+        $stmt = \App\Core\App::pdo()->prepare(
+            "UPDATE cobrancas SET status = 'vencida' WHERE status = 'emitida' AND vencimento < CURDATE()"
+        );
+        $stmt->execute();
+        return $stmt->rowCount();
     }
 }

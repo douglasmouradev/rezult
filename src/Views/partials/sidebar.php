@@ -19,8 +19,13 @@ $navConfig = [
     ['/metas', 'target', 'Metas'],
     ['/orcamentos', 'chart-bar', 'Orçamento'],
     ['/centros-custo', 'folders', 'Centros de custo'],
-    ['/relatorios/dre', 'chart-pie', 'Relatórios'],
     ['/empresas', 'buildings', 'Empresas'],
+];
+$navRelatorios = [
+    ['/relatorios/dre', 'chart-pie', 'DRE'],
+    ['/relatorios/fluxo', 'chart-line-up', 'Fluxo de caixa'],
+    ['/relatorios/categoria', 'tag', 'Por categoria'],
+    ['/relatorios/centro-custo', 'folders', 'Centro de custo'],
 ];
 $isActive = fn (string $path) => str_starts_with($current, $path)
     || ($path === '/relatorios/dre' && str_starts_with($current, '/relatorios'));
@@ -85,6 +90,16 @@ $isActive = fn (string $path) => str_starts_with($current, $path)
     <p class="sidebar-section">Configuração</p>
     <nav class="sidebar-nav">
         <?php foreach ($navConfig as [$path, $icon, $label]): ?>
+        <a href="<?= $path ?>" class="nav-item <?= $isActive($path) ? 'active' : '' ?>">
+            <i class="ph ph-<?= $icon ?>"></i>
+            <span><?= $label ?></span>
+        </a>
+        <?php endforeach; ?>
+    </nav>
+
+    <p class="sidebar-section">Relatórios</p>
+    <nav class="sidebar-nav">
+        <?php foreach ($navRelatorios as [$path, $icon, $label]): ?>
         <a href="<?= $path ?>" class="nav-item <?= $isActive($path) ? 'active' : '' ?>">
             <i class="ph ph-<?= $icon ?>"></i>
             <span><?= $label ?></span>

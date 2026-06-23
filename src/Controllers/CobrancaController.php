@@ -82,4 +82,18 @@ final class CobrancaController
         Session::flash('success', 'Cobrança marcada como paga.');
         View::redirect('/cobrancas/' . $id);
     }
+
+    public function cancelar(int $id): void
+    {
+        $this->service->cancelar($id, $this->eid());
+        Session::flash('success', 'Cobrança cancelada.');
+        View::redirect('/cobrancas');
+    }
+
+    public function enviarEmail(int $id): void
+    {
+        $ok = $this->service->enviarEmail($id, $this->eid());
+        Session::flash($ok ? 'success' : 'error', $ok ? 'Cobrança enviada por e-mail.' : 'Informe o e-mail do cliente.');
+        View::redirect('/cobrancas/' . $id);
+    }
 }
