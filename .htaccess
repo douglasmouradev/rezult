@@ -1,0 +1,10 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    RewriteRule ^favicon\.ico$ public/assets/img/favicon.ico [L]
+    RewriteRule ^favicon\.png$ public/assets/img/favicon.png [L]
+
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^ public/index.php [L]
+</IfModule>
