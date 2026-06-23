@@ -35,6 +35,9 @@ $isActive = fn (string $path) => str_starts_with($current, $path)
 <div class="sidebar-overlay" aria-hidden="true"></div>
 <aside class="sidebar" id="sidebar">
     <div class="sidebar-brand">
+        <button type="button" class="sidebar-close menu-toggle-inner" aria-label="Fechar menu">
+            <i class="ph ph-x"></i>
+        </button>
         <?php
         $asLink = true;
         $href = '/dashboard';
