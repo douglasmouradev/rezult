@@ -13,6 +13,7 @@ use App\Policies\TenantPolicy;
 use App\Services\AuthService;
 use App\Services\AuditoriaService;
 use App\Services\MailService;
+use App\Services\PlanService;
 
 final class EmpresaController
 {
@@ -91,6 +92,12 @@ final class EmpresaController
     public function trocar(int $id): void
     {
         TenantPolicy::abortUnlessEmpresaAccess($id);
+        $empresa = $this->model->find($id);
+        $plan = new PlanService();
+        if ($empresa && !$plan->empresaOperacional($empresa)) {
+            Session::flash('error', $plan->motivoBloqueio($empresa) ?? 'Loja indisponível.');
+            View::redirect('/empresas');
+        }
         $this->auth->definirEmpresaAtiva($id);
         $allowed = ['/dashboard', '/lancamentos', '/contas', '/categorias', '/metas', '/relatorios/dre', '/empresas'];
         $path = parse_url($_SERVER['HTTP_REFERER'] ?? '/dashboard', PHP_URL_PATH) ?: '/dashboard';

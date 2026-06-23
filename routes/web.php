@@ -91,6 +91,9 @@ $router->post('/perfil/senha', $wrap([PerfilController::class, 'senha']), [$auth
 $router->get('/superadmin', $wrap([SuperAdminController::class, 'index']), [$auth, $superadmin]);
 $router->get('/superadmin/usuarios', $wrap([SuperAdminController::class, 'usuarios']), [$auth, $superadmin]);
 $router->get('/superadmin/empresas', $wrap([SuperAdminController::class, 'empresas']), [$auth, $superadmin]);
+$router->post('/superadmin/empresas/atualizar', $wrap([SuperAdminController::class, 'atualizarEmpresa']), [$auth, $superadmin, $csrf]);
+$router->post('/superadmin/empresas/status', $wrap([SuperAdminController::class, 'alternarAtivo']), [$auth, $superadmin, $csrf]);
+$router->post('/superadmin/empresas/plano', $wrap([SuperAdminController::class, 'alternarPlano']), [$auth, $superadmin, $csrf]);
 $router->get('/superadmin/logins', $wrap([SuperAdminController::class, 'logins']), [$auth, $superadmin]);
 $router->post('/superadmin/promover', $wrap([SuperAdminController::class, 'promover']), [$auth, $superadmin, $csrf]);
 $router->post('/superadmin/revogar', $wrap([SuperAdminController::class, 'revogar']), [$auth, $superadmin, $csrf]);

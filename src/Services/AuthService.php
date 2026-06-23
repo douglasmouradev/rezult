@@ -46,8 +46,17 @@ final class AuthService
         Session::set('empresas', $lista);
 
         if (!empty($lista)) {
-            $primeira = $lista[0];
-            $this->definirEmpresaAtiva((int) $primeira['id'], $lista);
+            $plan = new PlanService();
+            $primeira = null;
+            foreach ($lista as $e) {
+                if ($plan->empresaOperacional($e)) {
+                    $primeira = $e;
+                    break;
+                }
+            }
+            if ($primeira) {
+                $this->definirEmpresaAtiva((int) $primeira['id'], $lista);
+            }
         }
 
         if ($lembrar) {
@@ -65,6 +74,11 @@ final class AuthService
 
         foreach ($lista as $e) {
             if ((int) $e['id'] === $empresaId) {
+                $plan = new PlanService();
+                if (!$plan->empresaOperacional($e) && !\App\Policies\SuperAdminPolicy::isSuperadmin()) {
+                    Session::flash('error', $plan->motivoBloqueio($e) ?? 'Loja indisponível.');
+                    return;
+                }
                 Session::regenerate();
                 Session::set('empresa_id', $empresaId);
                 Session::set('empresa', $e);

@@ -69,6 +69,8 @@ final class PlanService
             "SELECT e.plano FROM empresas e
              INNER JOIN usuario_empresa ue ON ue.empresa_id = e.id
              WHERE ue.usuario_id = :u AND ue.papel = 'dono'
+             AND e.ativo = 1 AND e.plano_ativo = 1
+             AND (e.plano_expira_em IS NULL OR e.plano_expira_em > NOW())
              ORDER BY FIELD(e.plano, 'business', 'pro', 'starter')
              LIMIT 1"
         );
@@ -76,5 +78,45 @@ final class PlanService
         $plano = $stmt->fetchColumn();
 
         return is_string($plano) && isset(self::LIMITES[$plano]) ? $plano : 'starter';
+    }
+
+    /** @param array<string, mixed> $empresa */
+    public function empresaOperacional(array $empresa): bool
+    {
+        return $this->motivoBloqueio($empresa) === null;
+    }
+
+    /** @param array<string, mixed> $empresa */
+    public function motivoBloqueio(array $empresa): ?string
+    {
+        if (isset($empresa['ativo']) && !(int) $empresa['ativo']) {
+            return 'Esta loja foi desabilitada pelo administrador da plataforma.';
+        }
+        if (isset($empresa['plano_ativo']) && !(int) $empresa['plano_ativo']) {
+            return 'O plano desta loja está inativo. Entre em contato com o suporte.';
+        }
+        if (!empty($empresa['plano_expira_em']) && strtotime((string) $empresa['plano_expira_em']) < time()) {
+            return 'O plano desta loja expirou em ' . date('d/m/Y', strtotime((string) $empresa['plano_expira_em'])) . '.';
+        }
+
+        return null;
+    }
+
+    public function buscarEmpresa(int $empresaId): ?array
+    {
+        $stmt = App::pdo()->prepare('SELECT * FROM empresas WHERE id = :id LIMIT 1');
+        $stmt->execute(['id' => $empresaId]);
+        $row = $stmt->fetch();
+
+        return $row ?: null;
+    }
+
+    public function planoLabel(string $plano): string
+    {
+        return match ($plano) {
+            'pro' => 'Pro',
+            'business' => 'Business',
+            default => 'Starter',
+        };
     }
 }

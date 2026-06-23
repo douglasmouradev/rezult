@@ -7,6 +7,8 @@ namespace App\Middleware;
 use App\Core\View;
 use App\Helpers\Session;
 use App\Models\Empresa;
+use App\Policies\SuperAdminPolicy;
+use App\Services\PlanService;
 
 final class EmpresaMiddleware
 {
@@ -23,6 +25,20 @@ final class EmpresaMiddleware
             Session::forget('empresa_id');
             View::redirect('/empresas');
         }
+
+        if (!SuperAdminPolicy::isSuperadmin()) {
+            $empresa = $empresaModel->find((int) $empresaId);
+            $plan = new PlanService();
+            if ($empresa) {
+                $motivo = $plan->motivoBloqueio($empresa);
+                if ($motivo !== null) {
+                    Session::forget('empresa_id');
+                    Session::flash('error', $motivo);
+                    View::redirect('/empresas');
+                }
+            }
+        }
+
         $next();
     }
 }

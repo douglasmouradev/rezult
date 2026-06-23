@@ -33,10 +33,63 @@ final class SuperAdminController
 
     public function empresas(): void
     {
+        $filtro = $_GET['filtro'] ?? '';
+        if (!in_array($filtro, ['', 'ativo', 'inativo'], true)) {
+            $filtro = '';
+        }
+
         View::render('superadmin/empresas', [
-            'title' => 'Empresas — Superadmin',
-            'empresas' => $this->service->listarEmpresas(),
+            'title' => 'Lojas — Superadmin',
+            'empresas' => $this->service->listarEmpresas($filtro !== '' ? $filtro : null),
+            'filtro' => $filtro,
+            'planos' => (new \App\Services\PlanService())->limites(),
         ]);
+    }
+
+    public function atualizarEmpresa(): void
+    {
+        $id = (int) ($_POST['empresa_id'] ?? 0);
+        if ($id <= 0) {
+            \App\Helpers\Session::flash('error', 'Loja inválida.');
+            View::redirect('/superadmin/empresas');
+        }
+
+        $this->service->atualizarEmpresa($id, $_POST);
+        AuditoriaService::registrar('superadmin_empresa_atualizada', 'empresa', $id, [
+            'plano' => $_POST['plano'] ?? null,
+            'ativo' => !empty($_POST['ativo']),
+            'plano_ativo' => !empty($_POST['plano_ativo']),
+        ]);
+        \App\Helpers\Session::flash('success', 'Loja atualizada.');
+        View::redirect('/superadmin/empresas');
+    }
+
+    public function alternarAtivo(): void
+    {
+        $id = (int) ($_POST['empresa_id'] ?? 0);
+        if ($id <= 0) {
+            \App\Helpers\Session::flash('error', 'Loja inválida.');
+            View::redirect('/superadmin/empresas');
+        }
+
+        $ativo = $this->service->alternarAtivo($id);
+        AuditoriaService::registrar($ativo ? 'superadmin_loja_ativada' : 'superadmin_loja_desabilitada', 'empresa', $id);
+        \App\Helpers\Session::flash('success', $ativo ? 'Loja reativada.' : 'Loja desabilitada.');
+        View::redirect('/superadmin/empresas');
+    }
+
+    public function alternarPlano(): void
+    {
+        $id = (int) ($_POST['empresa_id'] ?? 0);
+        if ($id <= 0) {
+            \App\Helpers\Session::flash('error', 'Loja inválida.');
+            View::redirect('/superadmin/empresas');
+        }
+
+        $ativo = $this->service->alternarPlanoAtivo($id);
+        AuditoriaService::registrar($ativo ? 'superadmin_plano_ativado' : 'superadmin_plano_desativado', 'empresa', $id);
+        \App\Helpers\Session::flash('success', $ativo ? 'Plano ativado.' : 'Plano desativado.');
+        View::redirect('/superadmin/empresas');
     }
 
     public function logins(): void

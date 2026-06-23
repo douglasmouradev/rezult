@@ -24,6 +24,15 @@ final class SuperAdminService
                  AND ultimo_login_em >= DATE_SUB(NOW(), INTERVAL ' . self::ATIVO_DIAS . ' DAY)'
             )->fetchColumn(),
             'total_empresas' => (int) $pdo->query('SELECT COUNT(*) FROM empresas')->fetchColumn(),
+            'empresas_plano_ativo' => (int) $pdo->query(
+                'SELECT COUNT(*) FROM empresas
+                 WHERE ativo = 1 AND plano_ativo = 1
+                 AND (plano_expira_em IS NULL OR plano_expira_em > NOW())'
+            )->fetchColumn(),
+            'empresas_desabilitadas' => (int) $pdo->query(
+                'SELECT COUNT(*) FROM empresas WHERE ativo = 0 OR plano_ativo = 0
+                 OR (plano_expira_em IS NOT NULL AND plano_expira_em <= NOW())'
+            )->fetchColumn(),
             'logins_hoje' => (int) $pdo->query(
                 'SELECT COUNT(*) FROM login_tentativas WHERE sucesso = 1 AND DATE(criado_em) = CURDATE()'
             )->fetchColumn(),
@@ -76,17 +85,99 @@ final class SuperAdminService
     }
 
     /** @return list<array<string, mixed>> */
-    public function listarEmpresas(): array
+    public function listarEmpresas(?string $filtro = null): array
     {
+        $where = '';
+        if ($filtro === 'ativo') {
+            $where = 'WHERE e.ativo = 1 AND e.plano_ativo = 1 AND (e.plano_expira_em IS NULL OR e.plano_expira_em > NOW())';
+        } elseif ($filtro === 'inativo') {
+            $where = 'WHERE e.ativo = 0 OR e.plano_ativo = 0 OR (e.plano_expira_em IS NOT NULL AND e.plano_expira_em <= NOW())';
+        }
+
         $stmt = App::pdo()->query(
-            "SELECT e.id, e.nome, e.plano, e.criado_em,
+            "SELECT e.id, e.nome, e.cnpj, e.plano, e.ativo, e.plano_ativo, e.plano_expira_em, e.criado_em,
                     (SELECT COUNT(*) FROM usuario_empresa ue WHERE ue.empresa_id = e.id) AS membros_qtd,
-                    (SELECT COUNT(*) FROM lancamentos l WHERE l.empresa_id = e.id) AS lancamentos_qtd
+                    (SELECT COUNT(*) FROM lancamentos l WHERE l.empresa_id = e.id) AS lancamentos_qtd,
+                    (SELECT u.nome FROM usuario_empresa ue
+                     INNER JOIN usuarios u ON u.id = ue.usuario_id
+                     WHERE ue.empresa_id = e.id AND ue.papel = 'dono' LIMIT 1) AS dono_nome,
+                    (SELECT u.email FROM usuario_empresa ue
+                     INNER JOIN usuarios u ON u.id = ue.usuario_id
+                     WHERE ue.empresa_id = e.id AND ue.papel = 'dono' LIMIT 1) AS dono_email
              FROM empresas e
+             {$where}
              ORDER BY e.criado_em DESC"
         );
 
         return $stmt->fetchAll() ?: [];
+    }
+
+    public function statusPlano(array $empresa): string
+    {
+        $plan = new PlanService();
+        if (!(int) ($empresa['ativo'] ?? 1)) {
+            return 'desabilitada';
+        }
+        if ($plan->motivoBloqueio($empresa) !== null) {
+            return 'plano_inativo';
+        }
+
+        return 'ativa';
+    }
+
+    public function atualizarEmpresa(int $id, array $dados): bool
+    {
+        $empresa = (new PlanService())->buscarEmpresa($id);
+        if (!$empresa) {
+            return false;
+        }
+
+        $plano = $dados['plano'] ?? $empresa['plano'] ?? 'starter';
+        if (!in_array($plano, ['starter', 'pro', 'business'], true)) {
+            $plano = 'starter';
+        }
+
+        $expira = trim((string) ($dados['plano_expira_em'] ?? ''));
+        $expiraSql = $expira !== '' ? date('Y-m-d H:i:s', strtotime($expira)) : null;
+
+        $stmt = App::pdo()->prepare(
+            'UPDATE empresas SET plano = :p, plano_ativo = :pa, ativo = :a, plano_expira_em = :exp WHERE id = :id'
+        );
+        $stmt->execute([
+            'p' => $plano,
+            'pa' => !empty($dados['plano_ativo']) ? 1 : 0,
+            'a' => !empty($dados['ativo']) ? 1 : 0,
+            'exp' => $expiraSql,
+            'id' => $id,
+        ]);
+
+        return true;
+    }
+
+    public function alternarAtivo(int $id): bool
+    {
+        $empresa = (new PlanService())->buscarEmpresa($id);
+        if (!$empresa) {
+            return false;
+        }
+
+        $novo = (int) ($empresa['ativo'] ?? 1) === 1 ? 0 : 1;
+        App::pdo()->prepare('UPDATE empresas SET ativo = :a WHERE id = :id')->execute(['a' => $novo, 'id' => $id]);
+
+        return $novo === 1;
+    }
+
+    public function alternarPlanoAtivo(int $id): bool
+    {
+        $empresa = (new PlanService())->buscarEmpresa($id);
+        if (!$empresa) {
+            return false;
+        }
+
+        $novo = (int) ($empresa['plano_ativo'] ?? 1) === 1 ? 0 : 1;
+        App::pdo()->prepare('UPDATE empresas SET plano_ativo = :p WHERE id = :id')->execute(['p' => $novo, 'id' => $id]);
+
+        return $novo === 1;
     }
 
     /** @return list<array<string, mixed>> */

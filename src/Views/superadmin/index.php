@@ -15,6 +15,8 @@ $svc = new \App\Services\SuperAdminService();
             ['Usuários', $s['total_usuarios'], 'users'],
             ['Ativos (' . $s['ativos_dias'] . 'd)', $s['usuarios_ativos'], 'user-check'],
             ['Empresas', $s['total_empresas'], 'buildings'],
+            ['Lojas c/ plano ativo', $s['empresas_plano_ativo'], 'storefront'],
+            ['Lojas inativas', $s['empresas_desabilitadas'], 'prohibit'],
             ['Logins hoje', $s['logins_hoje'], 'sign-in'],
             ['Logins 7 dias', $s['logins_7d'], 'chart-line-up'],
             ['Logins 30 dias', $s['logins_30d'], 'calendar'],

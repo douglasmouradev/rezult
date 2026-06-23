@@ -3,7 +3,7 @@ $current = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
 $tabs = [
     ['/superadmin', 'gauge', 'Painel'],
     ['/superadmin/usuarios', 'users', 'Usuários'],
-    ['/superadmin/empresas', 'buildings', 'Empresas'],
+    ['/superadmin/empresas', 'storefront', 'Lojas'],
     ['/superadmin/logins', 'sign-in', 'Logins'],
 ];
 $tabAtivo = fn (string $path): bool => $path === '/superadmin'
