@@ -38,6 +38,7 @@ $isActive = fn (string $path) => str_starts_with($current, $path)
         $href = '/dashboard';
         $class = 'brand-logo--sidebar';
         $imgClass = 'brand-logo__img--sidebar';
+        $showText = false;
         $imgHeight = 34;
         require __DIR__ . '/brand-logo.php';
         ?>

@@ -5,11 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="<?= htmlspecialchars($csrf ?? '') ?>">
     <title><?= $title ?? 'Rezult' ?> — <?= htmlspecialchars($appName) ?></title>
+    <?php require __DIR__ . '/../partials/head-favicon.php'; ?>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.45.0/dist/apexcharts.min.js" defer></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
-    <link rel="stylesheet" href="/assets/css/app.css?v=corp5">
+    <link rel="stylesheet" href="/assets/css/app.css?v=corp6">
 </head>
 <body>
 <div class="app-shell">

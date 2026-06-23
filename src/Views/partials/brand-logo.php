@@ -9,7 +9,7 @@ $asLink = $asLink ?? true;
 $href = $href ?? '/';
 $class = $class ?? '';
 $imgClass = $imgClass ?? '';
-$showText = $showText ?? true;
+$showText = $showText ?? false;
 $imgHeight = $imgHeight ?? 36;
 $imgWidth = (int) round($imgHeight * (390 / 234));
 $tagOpen = $asLink ? '<a href="' . htmlspecialchars($href) . '"' : '<div';

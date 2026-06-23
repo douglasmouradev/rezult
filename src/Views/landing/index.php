@@ -5,6 +5,7 @@
         $href = '/';
         $class = 'lp-logo';
         $imgClass = 'brand-logo__img--landing';
+        $showText = false;
         $imgHeight = 38;
         require dirname(__DIR__) . '/partials/brand-logo.php';
         ?>
@@ -222,6 +223,7 @@
                 $href = '/';
                 $class = 'lp-logo lp-logo-footer';
                 $imgClass = 'brand-logo__img--footer';
+                $showText = false;
                 $imgHeight = 36;
                 require dirname(__DIR__) . '/partials/brand-logo.php';
                 ?>
