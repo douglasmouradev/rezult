@@ -32,6 +32,8 @@
             <input type="hidden" name="_csrf" value="<?= $csrf ?>">
             <label>Digite <strong>EXCLUIR</strong> para confirmar</label>
             <input class="input" name="confirmar" required placeholder="EXCLUIR">
+            <label class="mt-2">Senha atual</label>
+            <input class="input" type="password" name="senha" required placeholder="Confirme sua identidade">
             <button type="submit" class="btn btn-danger mt-2">Confirmar exclusão</button>
         </form>
     </div>

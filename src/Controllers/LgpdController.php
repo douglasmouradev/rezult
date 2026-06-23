@@ -90,6 +90,11 @@ final class LgpdController
             Session::flash('error', 'Digite EXCLUIR para confirmar.');
             View::redirect('/privacidade/meus-dados');
         }
+        $usuario = (new \App\Models\Usuario())->find($uid);
+        if (!(new \App\Models\Usuario())->verificarSenha($usuario, $_POST['senha'] ?? '')) {
+            Session::flash('error', 'Senha incorreta. Confirme sua identidade para excluir a conta.');
+            View::redirect('/privacidade/meus-dados');
+        }
         $this->lgpd->processarExclusaoConta($uid);
         (new \App\Services\AuthService())->logout();
         Session::flash('success', 'Conta anonimizada conforme LGPD.');

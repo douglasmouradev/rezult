@@ -13,10 +13,25 @@ final class Upload
         'image/png' => 'png',
         'image/webp' => 'webp',
         'application/pdf' => 'pdf',
+        'application/x-ofx' => 'ofx',
+        'text/plain' => 'ofx',
+        'text/xml' => 'ofx',
+        'application/xml' => 'ofx',
     ];
 
-    /** Retorna path relativo para download autenticado */
+    /** Arquivos da empresa (comprovantes, etc.) */
     public static function store(array $file, string $subdir, int $empresaId): ?string
+    {
+        return self::storeInNamespace((string) $empresaId, $subdir, $file);
+    }
+
+    /** Avatar e arquivos pessoais do usuário */
+    public static function storeForUser(array $file, string $subdir, int $usuarioId): ?string
+    {
+        return self::storeInNamespace('users/' . $usuarioId, $subdir, $file);
+    }
+
+    private static function storeInNamespace(string $namespace, string $subdir, array $file): ?string
     {
         if ($file['error'] !== UPLOAD_ERR_OK) {
             return null;
@@ -34,11 +49,12 @@ final class Upload
         }
 
         $ext = self::ALLOWED[$mime];
-        if (strtolower(pathinfo($file['name'], PATHINFO_EXTENSION)) !== $ext) {
+        $originalExt = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+        if (!in_array($originalExt, ['jpg', 'jpeg', 'png', 'webp', 'pdf', 'ofx', 'xml'], true)) {
             return null;
         }
 
-        $dir = App::basePath() . '/storage/uploads/' . $empresaId . '/' . $subdir;
+        $dir = App::basePath() . '/storage/uploads/' . $namespace . '/' . $subdir;
         if (!is_dir($dir)) {
             mkdir($dir, 0750, true);
         }
@@ -50,7 +66,7 @@ final class Upload
             return null;
         }
 
-        return $empresaId . '/' . $subdir . '/' . $name;
+        return $namespace . '/' . $subdir . '/' . $name;
     }
 
     public static function absolutePath(string $relative): ?string

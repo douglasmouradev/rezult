@@ -11,3 +11,6 @@ $apiAuth = new ApiAuthMiddleware();
 
 $router->get('/api/v1/lancamentos', $wrap([ApiController::class, 'lancamentos']), [$apiAuth]);
 $router->post('/api/v1/lancamentos', $wrap([ApiController::class, 'criarLancamento']), [$apiAuth]);
+$router->get('/api/v1/contas', $wrap([ApiController::class, 'contas']), [$apiAuth]);
+$router->get('/api/v1/categorias', $wrap([ApiController::class, 'categorias']), [$apiAuth]);
+$router->get('/api/v1/cobrancas', $wrap([ApiController::class, 'cobrancas']), [$apiAuth]);

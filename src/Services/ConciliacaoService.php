@@ -89,6 +89,68 @@ final class ConciliacaoService
         return $concId;
     }
 
+    public function importarOfx(int $empresaId, int $contaId, string $path): int
+    {
+        if (!TenantPolicy::contaDaEmpresa($contaId, $empresaId)) {
+            throw new \InvalidArgumentException('Conta inválida.');
+        }
+
+        $concId = $this->model->save([
+            'empresa_id' => $empresaId,
+            'conta_id' => $contaId,
+            'arquivo' => basename($path),
+            'status' => 'processando',
+        ], $empresaId);
+
+        $transacoes = (new OfxParser())->parse($path);
+        $linhas = 0;
+        $conciliados = 0;
+        $pdo = App::pdo();
+        $ins = $pdo->prepare(
+            'INSERT INTO conciliacao_itens (conciliacao_id, data_movimento, descricao, valor, tipo_movimento, status, lancamento_id)
+             VALUES (:c, :d, :desc, :v, :t, :s, :l)'
+        );
+
+        foreach ($transacoes as $tx) {
+            $valor = abs((float) $tx['amount']);
+            $data = $tx['date'];
+            if ($valor <= 0 || !$data) {
+                continue;
+            }
+            $tipo = (float) $tx['amount'] < 0 ? 'debito' : 'credito';
+
+            $lancId = $this->buscarLancamento($empresaId, $contaId, $data, $valor, $tipo);
+            $status = $lancId ? 'conciliado' : 'pendente';
+            if ($lancId) {
+                $conciliados++;
+                $pdo->prepare('UPDATE lancamentos SET conciliado_em = NOW() WHERE id = :id AND empresa_id = :e')
+                    ->execute(['id' => $lancId, 'e' => $empresaId]);
+            }
+
+            $ins->execute([
+                'c' => $concId,
+                'd' => $data,
+                'desc' => $tx['description'],
+                'v' => $valor,
+                't' => $tipo,
+                's' => $status,
+                'l' => $lancId,
+            ]);
+            $linhas++;
+        }
+
+        $this->model->save([
+            'id' => $concId,
+            'status' => $conciliados === $linhas && $linhas > 0 ? 'concluida' : 'pendente',
+            'total_itens' => $linhas,
+            'conciliados' => $conciliados,
+        ], $empresaId);
+
+        AuditoriaService::registrar('conciliacao_importada', 'conciliacao', $concId);
+        (new AutomacaoService())->aplicarGatilho($empresaId, 'import_csv');
+        return $concId;
+    }
+
     public function conciliarManual(int $itemId, int $lancamentoId, int $empresaId, int $conciliacaoId): void
     {
         $conc = $this->model->find($conciliacaoId, $empresaId);

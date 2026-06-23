@@ -38,11 +38,26 @@ final class ConciliacaoController
     {
         $eid = $this->eid();
         $contaId = (int) ($_POST['conta_id'] ?? 0);
-        if (empty($_FILES['csv']['tmp_name'])) {
-            Session::flash('error', 'Envie um arquivo CSV.');
+        if (empty($_FILES['arquivo']['tmp_name'])) {
+            Session::flash('error', 'Envie um arquivo CSV ou OFX.');
             View::redirect('/conciliacoes');
         }
-        $id = $this->service->importarCsv($eid, $contaId, $_FILES['csv']['tmp_name']);
+
+        $nome = $_FILES['arquivo']['name'] ?? '';
+        $ext = strtolower(pathinfo($nome, PATHINFO_EXTENSION));
+        $path = $_FILES['arquivo']['tmp_name'];
+
+        $id = match ($ext) {
+            'ofx' => $this->service->importarOfx($eid, $contaId, $path),
+            'csv' => $this->service->importarCsv($eid, $contaId, $path),
+            default => null,
+        };
+
+        if ($id === null) {
+            Session::flash('error', 'Formato não suportado. Use CSV ou OFX.');
+            View::redirect('/conciliacoes');
+        }
+
         Session::flash('success', 'Extrato importado. Revise os itens pendentes.');
         View::redirect('/conciliacoes/' . $id);
     }

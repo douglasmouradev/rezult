@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Core\App;
+use App\Helpers\EnumValidator;
 use App\Helpers\Sanitize;
 use App\Helpers\Upload;
 use App\Models\Conta;
@@ -49,19 +50,30 @@ final class LancamentoService
         }
 
         $tags = array_filter(array_map('trim', explode(',', Sanitize::raw($input['tags'] ?? ''))));
+        $tipo = EnumValidator::assertIn((string) $input['tipo'], EnumValidator::TIPOS_LANCAMENTO, 'Tipo');
+        $status = EnumValidator::assertIn((string) ($input['status'] ?? 'pendente'), EnumValidator::STATUS_LANCAMENTO, 'Status');
+
+        $papel = TenantPolicy::papel($empresaId);
+        if (!$id && $papel?->value === 'operador' && $status === 'pago') {
+            $status = 'aguardando_aprovacao';
+        }
+
+        $contatoId = !empty($input['contato_id']) ? (int) $input['contato_id'] : null;
+
         $data = [
             'empresa_id' => $empresaId,
             'conta_id' => $contaId,
             'categoria_id' => $categoriaId,
             'centro_custo_id' => $centroCustoId,
             'meta_id' => $metaId,
-            'tipo' => $input['tipo'],
+            'contato_id' => $contatoId,
+            'tipo' => $tipo,
             'descricao' => Sanitize::raw($input['descricao']),
             'parceiro' => Sanitize::raw($input['parceiro'] ?? '') ?: null,
             'valor' => abs(Sanitize::money($input['valor'] ?? '0')),
             'data_lancamento' => $input['data_lancamento'],
             'data_vencimento' => $input['data_vencimento'] ?: null,
-            'status' => $input['status'] ?? 'pendente',
+            'status' => $status,
             'recorrente' => !empty($input['recorrente']) ? 1 : 0,
             'frequencia' => !empty($input['recorrente']) ? ($input['frequencia'] ?? null) : null,
             'recorrente_proximo' => !empty($input['recorrente']) ? $this->proximaDataRecorrente($input['data_lancamento'], $input['frequencia'] ?? 'mensal') : null,
@@ -85,6 +97,13 @@ final class LancamentoService
         $this->syncMeta($metaId, $empresaId);
         AuditoriaService::registrar($id ? 'lancamento_atualizado' : 'lancamento_criado', 'lancamento', $lancId);
         (new AutomacaoService())->aplicarDescricao($empresaId, $data['descricao'], $lancId);
+
+        if ($data['status'] === 'pago') {
+            $lanc = $this->model->find($lancId, $empresaId);
+            if ($lanc) {
+                (new WebhookService())->dispatch('lancamento.pago', $empresaId, $lanc);
+            }
+        }
 
         return $lancId;
     }

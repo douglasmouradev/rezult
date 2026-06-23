@@ -5,6 +5,7 @@
     <select name="tipo" class="input"><option value="despesa" <?= $tipo==='despesa'?'selected':'' ?>>Despesa</option><option value="receita" <?= $tipo==='receita'?'selected':'' ?>>Receita</option></select>
     <button type="submit" class="btn-primary btn-sm">Filtrar</button>
     <a href="?<?= http_build_query(array_merge($periodo, ['tipo' => $tipo, 'formato' => 'xlsx'])) ?>" class="btn btn-secondary btn-sm">Exportar Excel</a>
+    <a href="?<?= http_build_query(array_merge($periodo, ['tipo' => $tipo, 'formato' => 'pdf'])) ?>" class="btn btn-secondary btn-sm">Exportar PDF</a>
 </form>
 <div class="grid-2">
     <div class="card table-wrap">

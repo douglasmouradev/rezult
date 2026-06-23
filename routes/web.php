@@ -17,6 +17,8 @@ use App\Controllers\LancamentoController;
 use App\Controllers\LgpdController;
 use App\Controllers\ApiTokenController;
 use App\Controllers\CentroCustoController;
+use App\Controllers\ContatoController;
+use App\Controllers\IntegracaoController;
 use App\Controllers\MetaController;
 use App\Controllers\NotificacaoController;
 use App\Controllers\OrcamentoController;
@@ -29,10 +31,12 @@ use App\Controllers\NotaFiscalController;
 use App\Controllers\AutomacaoController;
 use App\Controllers\ConciliacaoController;
 use App\Controllers\AssistenteController;
+use App\Controllers\WebhookController;
 use App\Middleware\AuthMiddleware;
 use App\Middleware\CsrfMiddleware;
 use App\Middleware\EmpresaMiddleware;
 use App\Middleware\GuestMiddleware;
+use App\Middleware\PlanMiddleware;
 use App\Middleware\RbacMiddleware;
 
 /** @var Router $router */
@@ -43,6 +47,8 @@ $guest = new GuestMiddleware();
 $csrf = new CsrfMiddleware();
 $empresa = new EmpresaMiddleware();
 $rbac = new RbacMiddleware('config');
+$planEmpresa = new PlanMiddleware('empresa');
+$planConvite = new PlanMiddleware('convite');
 
 $router->get('/health', $wrap([HealthController::class, 'check']));
 
@@ -83,6 +89,10 @@ $router->get('/notificacoes', $wrap([NotificacaoController::class, 'index']), [$
 $router->post('/notificacoes/{id}/lida', $wrap([NotificacaoController::class, 'marcarLida']), [$auth, $csrf]);
 $router->post('/notificacoes/lidas', $wrap([NotificacaoController::class, 'marcarTodas']), [$auth, $csrf]);
 
+$router->get('/webhooks', $wrap([WebhookController::class, 'index']), [$auth, $empresa, $rbac]);
+$router->post('/webhooks', $wrap([WebhookController::class, 'salvar']), [$auth, $empresa, $rbac, $csrf]);
+$router->post('/webhooks/{id}/excluir', $wrap([WebhookController::class, 'excluir']), [$auth, $empresa, $rbac, $csrf]);
+
 $router->get('/api/tokens', $wrap([ApiTokenController::class, 'index']), [$auth, $empresa, $rbac]);
 $router->post('/api/tokens', $wrap([ApiTokenController::class, 'criar']), [$auth, $empresa, $rbac, $csrf]);
 $router->post('/api/tokens/{id}/revogar', $wrap([ApiTokenController::class, 'revogar']), [$auth, $empresa, $rbac, $csrf]);
@@ -95,13 +105,20 @@ $router->get('/centros-custo', $wrap([CentroCustoController::class, 'index']), [
 $router->post('/centros-custo', $wrap([CentroCustoController::class, 'salvar']), [$auth, $empresa, $rbac, $csrf]);
 $router->post('/centros-custo/{id}/excluir', $wrap([CentroCustoController::class, 'excluir']), [$auth, $empresa, $rbac, $csrf]);
 
+$router->get('/contatos', $wrap([ContatoController::class, 'index']), [$auth, $empresa, $rbac]);
+$router->post('/contatos', $wrap([ContatoController::class, 'salvar']), [$auth, $empresa, $rbac, $csrf]);
+$router->post('/contatos/{id}/excluir', $wrap([ContatoController::class, 'excluir']), [$auth, $empresa, $rbac, $csrf]);
+
+$router->get('/integracoes', $wrap([IntegracaoController::class, 'index']), [$auth, $empresa, $rbac]);
+$router->post('/integracoes', $wrap([IntegracaoController::class, 'salvar']), [$auth, $empresa, $rbac, $csrf]);
+
 $router->get('/empresas', $wrap([EmpresaController::class, 'index']), [$auth]);
 $router->get('/empresas/criar', $wrap([EmpresaController::class, 'criarForm']), [$auth]);
-$router->post('/empresas', $wrap([EmpresaController::class, 'criar']), [$auth, $csrf]);
+$router->post('/empresas', $wrap([EmpresaController::class, 'criar']), [$auth, $planEmpresa, $csrf]);
 $router->get('/empresas/{id}/editar', $wrap([EmpresaController::class, 'editarForm']), [$auth]);
 $router->post('/empresas/{id}', $wrap([EmpresaController::class, 'editar']), [$auth, $csrf]);
 $router->post('/empresas/{id}/trocar', $wrap([EmpresaController::class, 'trocar']), [$auth, $csrf]);
-$router->post('/empresas/{id}/convidar', $wrap([EmpresaController::class, 'convidar']), [$auth, $rbac, $csrf]);
+$router->post('/empresas/{id}/convidar', $wrap([EmpresaController::class, 'convidar']), [$auth, $rbac, $planConvite, $csrf]);
 
 $router->get('/equipe', $wrap([EquipeController::class, 'index']), [$auth, $empresa, $rbac]);
 $router->post('/equipe/{id}/remover', $wrap([EquipeController::class, 'remover']), [$auth, $empresa, $rbac, $csrf]);

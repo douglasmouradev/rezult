@@ -8,6 +8,7 @@ use App\Core\App;
 use App\Core\View;
 use App\Helpers\Sanitize;
 use App\Helpers\Session;
+use App\Helpers\Validator;
 use App\Models\Empresa;
 use App\Models\Usuario;
 use App\Services\AuditoriaService;
@@ -22,10 +23,12 @@ final class ConviteController
             Session::flash('error', 'Convite inválido ou expirado.');
             View::redirect('/login');
         }
+        $usuarioExiste = (new Usuario())->findByEmail($convite['email']) !== null;
         View::render('convite/aceitar', [
             'title' => 'Aceitar convite',
             'convite' => $convite,
             'token' => $token,
+            'usuarioExiste' => $usuarioExiste,
         ], layout: 'guest');
     }
 
@@ -39,16 +42,23 @@ final class ConviteController
 
         $usuarioModel = new Usuario();
         $usuario = $usuarioModel->findByEmail($convite['email']);
+        $senha = $_POST['senha'] ?? '';
 
         if (!$usuario) {
-            $senha = $_POST['senha'] ?? '';
-            if (strlen($senha) < 8) {
-                Session::flash('error', 'Senha deve ter no mínimo 8 caracteres.');
+            $v = new Validator($_POST);
+            $v->required('nome', 'senha')->min('senha', 8)->password('senha');
+            if ($v->fails()) {
+                Session::flash('error', $v->first());
                 View::redirect("/convite/{$token}");
             }
-            $uid = $usuarioModel->criar(Sanitize::raw($_POST['nome'] ?? $convite['email']), $convite['email'], $senha);
+            $uid = $usuarioModel->criar(Sanitize::raw($_POST['nome']), $convite['email'], $senha);
             App::pdo()->prepare('UPDATE usuarios SET email_verificado = 1 WHERE id = :id')->execute(['id' => $uid]);
             $usuario = $usuarioModel->findByEmail($convite['email']);
+        } else {
+            if ($senha === '' || !$usuarioModel->verificarSenha($usuario, $senha)) {
+                Session::flash('error', 'Informe a senha da sua conta para aceitar o convite.');
+                View::redirect("/convite/{$token}");
+            }
         }
 
         (new Empresa())->vincularUsuario((int) $usuario['id'], (int) $convite['empresa_id'], $convite['papel']);

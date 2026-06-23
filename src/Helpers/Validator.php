@@ -36,6 +36,22 @@ final class Validator
         return $this;
     }
 
+    public function password(string $field = 'senha'): self
+    {
+        $value = (string) ($this->data[$field] ?? '');
+        if ($value === '') {
+            return $this;
+        }
+        if (mb_strlen($value) < 8) {
+            $this->errors[$field] = 'Senha deve ter no mínimo 8 caracteres.';
+            return $this;
+        }
+        if (!preg_match('/[A-Z]/', $value) || !preg_match('/[a-z]/', $value) || !preg_match('/[0-9]/', $value)) {
+            $this->errors[$field] = 'Senha deve conter maiúscula, minúscula e número.';
+        }
+        return $this;
+    }
+
     public function in(string $field, array $allowed): self
     {
         if (isset($this->data[$field]) && !in_array($this->data[$field], $allowed, true)) {

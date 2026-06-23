@@ -4,6 +4,7 @@
     <input type="date" name="ate" class="input" value="<?= $periodo['ate'] ?>">
     <button type="submit" class="btn-primary btn-sm">Filtrar</button>
     <a href="?<?= http_build_query(array_merge($periodo, ['formato' => 'xlsx'])) ?>" class="btn btn-secondary btn-sm">Exportar Excel</a>
+    <a href="?<?= http_build_query(array_merge($periodo, ['formato' => 'pdf'])) ?>" class="btn btn-secondary btn-sm">Exportar PDF</a>
 </form>
 <div class="card table-wrap">
 <table>

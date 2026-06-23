@@ -10,6 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.45.0/dist/apexcharts.min.js" defer></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <link rel="manifest" href="/manifest.json">
     <link rel="stylesheet" href="/assets/css/app.css?v=corp6">
 </head>
 <body>

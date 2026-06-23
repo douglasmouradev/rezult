@@ -55,6 +55,10 @@ final class RelatorioController
         if (($_GET['formato'] ?? '') === 'xlsx') {
             $this->export->excelGenerico('Fluxo de caixa', ['Período' => $p['de'] . ' a ' . $p['ate']], $dados, 'fluxo');
         }
+        if (($_GET['formato'] ?? '') === 'pdf') {
+            $html = $this->htmlRelatorio('Fluxo de caixa', $p, $dados, ['Data', 'Entrada', 'Saída', 'Saldo']);
+            $this->export->pdfHtml($html, 'fluxo-' . date('Y-m-d'));
+        }
         View::render('relatorios/fluxo', [
             'title' => 'Fluxo de caixa',
             'dados' => $dados,
@@ -70,6 +74,10 @@ final class RelatorioController
         $dados = $this->service->porCategoria($eid, $p['de'], $p['ate'], $tipo);
         if (($_GET['formato'] ?? '') === 'xlsx') {
             $this->export->excelGenerico('Por categoria', ['Tipo' => $tipo, 'Período' => $p['de'] . ' a ' . $p['ate']], $dados, 'categoria');
+        }
+        if (($_GET['formato'] ?? '') === 'pdf') {
+            $html = $this->htmlRelatorio('Por categoria', $p, $dados, ['Categoria', 'Total']);
+            $this->export->pdfHtml($html, 'categoria-' . date('Y-m-d'));
         }
         View::render('relatorios/categoria', [
             'title' => 'Por categoria',
@@ -94,11 +102,36 @@ final class RelatorioController
                 'centro-custo'
             );
         }
+        if (($_GET['formato'] ?? '') === 'pdf') {
+            $html = $this->htmlRelatorio('Por centro de custo', $p, $dados, ['Centro', 'Total']);
+            $this->export->pdfHtml($html, 'centro-custo-' . date('Y-m-d'));
+        }
         View::render('relatorios/centro-custo', [
             'title' => 'Por centro de custo',
             'dados' => $dados,
             'periodo' => $p,
             'tipo' => $tipo,
         ]);
+    }
+
+    private function htmlRelatorio(string $titulo, array $periodo, array $dados, array $colunas): string
+    {
+        $rows = '';
+        foreach ($dados as $row) {
+            $cells = '';
+            foreach (array_values($row) as $val) {
+                $cells .= '<td>' . htmlspecialchars((string) $val) . '</td>';
+            }
+            $rows .= '<tr>' . $cells . '</tr>';
+        }
+        $ths = '';
+        foreach ($colunas as $c) {
+            $ths .= '<th>' . htmlspecialchars($c) . '</th>';
+        }
+        return '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>' . htmlspecialchars($titulo) . '</title>
+        <style>body{font-family:sans-serif}table{width:100%;border-collapse:collapse}th,td{border:1px solid #ccc;padding:6px}</style></head>
+        <body><h1>' . htmlspecialchars($titulo) . '</h1>
+        <p>Período: ' . htmlspecialchars($periodo['de'] . ' a ' . $periodo['ate']) . '</p>
+        <table><thead><tr>' . $ths . '</tr></thead><tbody>' . $rows . '</tbody></table></body></html>';
     }
 }

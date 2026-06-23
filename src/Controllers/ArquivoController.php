@@ -17,8 +17,13 @@ final class ArquivoController
             exit;
         }
 
+        $uid = TenantPolicy::usuarioId();
         $empresaId = TenantPolicy::empresaId();
-        if (!str_starts_with($path, (string) $empresaId . '/')) {
+
+        $permitido = str_starts_with($path, "users/{$uid}/")
+            || ($empresaId > 0 && str_starts_with($path, "{$empresaId}/"));
+
+        if (!$permitido) {
             http_response_code(403);
             exit;
         }
@@ -33,6 +38,7 @@ final class ArquivoController
         header('Content-Type: ' . $mime);
         header('Content-Disposition: inline; filename="' . basename($absolute) . '"');
         header('X-Content-Type-Options: nosniff');
+        header('Cache-Control: private, max-age=3600');
         readfile($absolute);
         exit;
     }

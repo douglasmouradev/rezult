@@ -19,7 +19,7 @@ final class AssistenteService
     {
         $p = mb_strtolower(trim($pergunta));
 
-        if ($this->openAiDisponivel()) {
+        if ($this->openAiDisponivel() && $this->usuarioConsentiuIa()) {
             $ia = $this->responderOpenAi($empresaId, $pergunta);
             if ($ia !== null) {
                 return $ia;
@@ -86,6 +86,17 @@ final class AssistenteService
     private function openAiDisponivel(): bool
     {
         return (bool) ($_ENV['OPENAI_API_KEY'] ?? '');
+    }
+
+    private function usuarioConsentiuIa(): bool
+    {
+        $uid = (int) (\App\Helpers\Session::get('usuario_id') ?? 0);
+        if ($uid <= 0) {
+            return false;
+        }
+        $stmt = App::pdo()->prepare('SELECT ia_consentimento FROM usuarios WHERE id = :id LIMIT 1');
+        $stmt->execute(['id' => $uid]);
+        return (bool) $stmt->fetchColumn();
     }
 
     private function responderOpenAi(int $empresaId, string $pergunta): ?string

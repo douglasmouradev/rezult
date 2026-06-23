@@ -44,7 +44,10 @@ final class AuthService
         }
 
         if ($lembrar) {
+            $this->invalidarRememberTokens((int) $usuario['id']);
             $this->criarRememberToken((int) $usuario['id']);
+        } else {
+            $this->invalidarRememberTokens((int) $usuario['id']);
         }
     }
 
@@ -55,6 +58,7 @@ final class AuthService
 
         foreach ($lista as $e) {
             if ((int) $e['id'] === $empresaId) {
+                Session::regenerate();
                 Session::set('empresa_id', $empresaId);
                 Session::set('empresa', $e);
                 Session::set('empresas', $lista);
@@ -69,11 +73,11 @@ final class AuthService
         if (isset($_COOKIE['remember'])) {
             $parts = explode(':', $_COOKIE['remember'], 2);
             if (count($parts) === 2) {
-                $stmt = App::pdo()->prepare('DELETE FROM remember_tokens WHERE selector = :s');
-                $stmt->execute(['s' => $parts[0]]);
+                $this->invalidarRememberSelector($parts[0]);
             }
             setcookie('remember', '', ['expires' => time() - 3600, 'path' => '/']);
         }
+        unset($_SESSION['api_token_plain']);
         session_destroy();
     }
 
@@ -116,8 +120,8 @@ final class AuthService
         if ($u) {
             (new MailService())->enviar($u['email'], 'Rezult — ' . $tipo, "Acesse: {$link}");
         }
-        if (App::config('debug')) {
-            Session::flash('info', "Link: {$link}");
+        if (App::config('debug') && App::config('env') !== 'production') {
+            \App\Core\Logger::info('Token e-mail dev', ['tipo' => $tipo, 'usuario_id' => $usuarioId]);
         }
         return $token;
     }
@@ -165,7 +169,18 @@ final class AuthService
             return false;
         }
 
-        $this->login($row, lembrar: false);
+        $this->invalidarRememberSelector($selector);
+        $this->login($row, lembrar: true);
         return true;
+    }
+
+    private function invalidarRememberTokens(int $usuarioId): void
+    {
+        App::pdo()->prepare('DELETE FROM remember_tokens WHERE usuario_id = :u')->execute(['u' => $usuarioId]);
+    }
+
+    private function invalidarRememberSelector(string $selector): void
+    {
+        App::pdo()->prepare('DELETE FROM remember_tokens WHERE selector = :s')->execute(['s' => $selector]);
     }
 }

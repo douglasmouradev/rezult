@@ -19,6 +19,8 @@ $navConfig = [
     ['/metas', 'target', 'Metas'],
     ['/orcamentos', 'chart-bar', 'Orçamento'],
     ['/centros-custo', 'folders', 'Centros de custo'],
+    ['/contatos', 'address-book', 'Contatos'],
+    ['/integracoes', 'plugs-connected', 'Integrações'],
     ['/empresas', 'buildings', 'Empresas'],
 ];
 $navRelatorios = [
@@ -84,6 +86,9 @@ $isActive = fn (string $path) => str_starts_with($current, $path)
         </a>
         <a href="/api/tokens" class="nav-item <?= str_starts_with($current, '/api') ? 'active' : '' ?>">
             <i class="ph ph-code"></i><span>API</span>
+        </a>
+        <a href="/webhooks" class="nav-item <?= str_starts_with($current, '/webhooks') ? 'active' : '' ?>">
+            <i class="ph ph-webhooks-logo"></i><span>Webhooks</span>
         </a>
     </nav>
     <?php endif; ?>

@@ -17,6 +17,7 @@ $mimeTypes = [
     'webp' => 'image/webp',
     'ico' => 'image/x-icon',
     'svg' => 'image/svg+xml',
+    'json' => 'application/json',
 ];
 
 $sendFile = static function (string $path) use ($mimeTypes): void {
@@ -51,6 +52,10 @@ if (in_array($uri, $iconUris, true)) {
         $sendFile($candidate);
     }
     $sendFile($logo);
+}
+
+if ($uri === '/manifest.json') {
+    $sendFile($publicDir . '/manifest.json');
 }
 
 if (str_starts_with($uri, '/assets/')) {

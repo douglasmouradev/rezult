@@ -182,7 +182,9 @@ final class LancamentoController
         $eid = $this->empresaId();
         \App\Policies\TenantPolicy::abortUnlessCanApproveLancamento();
         \App\Core\App::pdo()->prepare(
-            'UPDATE lancamentos SET aprovado_por = :u, aprovado_em = NOW() WHERE id = :id AND empresa_id = :e'
+            "UPDATE lancamentos SET aprovado_por = :u, aprovado_em = NOW(),
+             status = CASE WHEN status = 'aguardando_aprovacao' THEN 'pago' ELSE status END
+             WHERE id = :id AND empresa_id = :e"
         )->execute(['u' => \App\Policies\TenantPolicy::usuarioId(), 'id' => $id, 'e' => $eid]);
         Session::flash('success', 'Lançamento aprovado.');
         View::redirect('/lancamentos');

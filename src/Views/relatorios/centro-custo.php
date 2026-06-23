@@ -18,6 +18,7 @@
     </div>
     <button type="submit" class="btn-primary btn-sm"><i class="ph ph-funnel"></i> Atualizar</button>
     <a href="?de=<?= $periodo['de'] ?>&ate=<?= $periodo['ate'] ?>&tipo=<?= $tipo ?>&formato=xlsx" class="btn-ghost btn-sm"><i class="ph ph-file-xls"></i> Excel</a>
+    <a href="?de=<?= $periodo['de'] ?>&ate=<?= $periodo['ate'] ?>&tipo=<?= $tipo ?>&formato=pdf" class="btn-ghost btn-sm"><i class="ph ph-file-pdf"></i> PDF</a>
 </form>
 
 <div class="card data-card">

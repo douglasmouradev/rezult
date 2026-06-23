@@ -80,7 +80,7 @@ final class AuthController
 
         $v = new Validator($_POST);
         $v->required('nome', 'email', 'senha', 'senha_confirmacao')
-            ->email('email')->min('senha', 8);
+            ->email('email')->min('senha', 8)->password('senha');
 
         if ($_POST['senha'] !== ($_POST['senha_confirmacao'] ?? '')) {
             Session::flash('error', 'As senhas não coincidem.');
@@ -157,7 +157,7 @@ final class AuthController
         $token = $_POST['token'] ?? '';
         $senha = $_POST['senha'] ?? '';
         $v = new Validator($_POST);
-        $v->required('senha', 'senha_confirmacao')->min('senha', 8);
+        $v->required('senha', 'senha_confirmacao')->min('senha', 8)->password('senha');
         if (($_POST['senha'] ?? '') !== ($_POST['senha_confirmacao'] ?? '')) {
             Session::flash('error', 'As senhas não coincidem.');
             View::redirect('/redefinir?token=' . urlencode($token));

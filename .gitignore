@@ -1,5 +1,8 @@
 /vendor/
 .env
+.env.*
+!.env.example
+.env.backup
 /storage/uploads/*
 !/storage/uploads/.gitkeep
 /public/assets/uploads/*

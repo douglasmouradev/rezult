@@ -8,6 +8,11 @@
             <input class="input" name="nome" value="<?= htmlspecialchars($usuario['nome'] ?? '') ?>" required>
             <label class="mt-2">Avatar</label>
             <input type="file" name="avatar" accept="image/*" class="input">
+            <label class="mt-2 checkbox-label">
+                <input type="checkbox" name="ia_consentimento" value="1" <?= !empty($usuario['ia_consentimento']) ? 'checked' : '' ?>>
+                Permitir uso do assistente de IA (OpenAI) com meus dados financeiros
+            </label>
+            <p class="text-muted" style="font-size:0.85rem;margin-top:4px">Necessário para categorização e insights automáticos. Você pode revogar a qualquer momento.</p>
             <button type="submit" class="btn btn-primary mt-2">Salvar</button>
         </form>
     </div>

@@ -124,6 +124,11 @@ final class CobrancaService
             ], $empresaId);
             $this->lancamentos->invalidarCacheDashboard($empresaId);
         }
+
+        $atualizada = $this->model->find($id, $empresaId);
+        if ($atualizada) {
+            (new WebhookService())->dispatch('cobranca.paga', $empresaId, $atualizada);
+        }
     }
 
     private function gerarCodigoPix(array $c): string
