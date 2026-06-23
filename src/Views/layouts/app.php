@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="/assets/img/logo-rezult.png?v=4" sizes="32x32">
+    <link rel="shortcut icon" href="/favicon.ico?v=4">
     <meta name="csrf-token" content="<?= htmlspecialchars($csrf ?? '') ?>">
     <title><?= $title ?? 'Rezult' ?> — <?= htmlspecialchars($appName) ?></title>
     <?php require __DIR__ . '/../partials/head-favicon.php'; ?>
