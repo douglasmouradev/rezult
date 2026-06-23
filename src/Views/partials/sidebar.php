@@ -75,6 +75,15 @@ $isActive = fn (string $path) => str_starts_with($current, $path)
         </a>
     </nav>
 
+    <?php if (!empty($isSuperadmin)): ?>
+    <p class="sidebar-section">Plataforma</p>
+    <nav class="sidebar-nav">
+        <a href="/superadmin" class="nav-item <?= str_starts_with($current, '/superadmin') ? 'active' : '' ?>">
+            <i class="ph ph-shield-star"></i><span>Superadmin</span>
+        </a>
+    </nav>
+    <?php endif; ?>
+
     <?php if (!empty($podeGerenciar)): ?>
     <p class="sidebar-section">Administração</p>
     <nav class="sidebar-nav">

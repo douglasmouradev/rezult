@@ -14,4 +14,5 @@ return [
     'mail_from_name' => $_ENV['MAIL_FROM_NAME'] ?? 'Rezult',
     'mail_host' => $_ENV['MAIL_HOST'] ?? '',
     'lgpd_dpo_email' => $_ENV['LGPD_DPO_EMAIL'] ?? 'privacidade@rezult.app',
+    'superadmin_email' => $_ENV['SUPERADMIN_EMAIL'] ?? '',
 ];

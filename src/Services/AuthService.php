@@ -26,6 +26,8 @@ final class AuthService
 
     public function login(array $usuario, bool $lembrar = false): void
     {
+        SuperAdminService::sincronizarSuperadminConfig((int) $usuario['id'], (string) $usuario['email']);
+
         Session::regenerate();
         Session::set('usuario_id', $usuario['id']);
         Session::set('usuario', [
@@ -34,6 +36,11 @@ final class AuthService
             'email' => $usuario['email'],
             'avatar_url' => $usuario['avatar_url'],
         ]);
+
+        $isSuper = $this->usuarios->find((int) $usuario['id']);
+        Session::set('is_superadmin', (int) ($isSuper['is_superadmin'] ?? 0) === 1);
+
+        $this->registrarAcesso((int) $usuario['id']);
 
         $lista = $this->empresas->listarPorUsuario((int) $usuario['id']);
         Session::set('empresas', $lista);
@@ -182,5 +189,15 @@ final class AuthService
     private function invalidarRememberSelector(string $selector): void
     {
         App::pdo()->prepare('DELETE FROM remember_tokens WHERE selector = :s')->execute(['s' => $selector]);
+    }
+
+    private function registrarAcesso(int $usuarioId): void
+    {
+        try {
+            App::pdo()->prepare('UPDATE usuarios SET ultimo_login_em = NOW() WHERE id = :id')
+                ->execute(['id' => $usuarioId]);
+        } catch (\Throwable) {
+            // Coluna pode não existir antes da migration 011
+        }
     }
 }

@@ -32,12 +32,14 @@ use App\Controllers\AutomacaoController;
 use App\Controllers\ConciliacaoController;
 use App\Controllers\AssistenteController;
 use App\Controllers\WebhookController;
+use App\Controllers\SuperAdminController;
 use App\Middleware\AuthMiddleware;
 use App\Middleware\CsrfMiddleware;
 use App\Middleware\EmpresaMiddleware;
 use App\Middleware\GuestMiddleware;
 use App\Middleware\PlanMiddleware;
 use App\Middleware\RbacMiddleware;
+use App\Middleware\SuperAdminMiddleware;
 
 /** @var Router $router */
 $wrap = fn (array $h): callable => fn (...$p) => (new $h[0]())->{$h[1]}(...$p);
@@ -49,6 +51,7 @@ $empresa = new EmpresaMiddleware();
 $rbac = new RbacMiddleware('config');
 $planEmpresa = new PlanMiddleware('empresa');
 $planConvite = new PlanMiddleware('convite');
+$superadmin = new SuperAdminMiddleware();
 
 $router->get('/health', $wrap([HealthController::class, 'check']));
 
@@ -84,6 +87,13 @@ $router->post('/onboarding/concluir', $wrap([DashboardController::class, 'conclu
 $router->get('/perfil', $wrap([PerfilController::class, 'index']), [$auth]);
 $router->post('/perfil', $wrap([PerfilController::class, 'atualizar']), [$auth, $csrf]);
 $router->post('/perfil/senha', $wrap([PerfilController::class, 'senha']), [$auth, $csrf]);
+
+$router->get('/superadmin', $wrap([SuperAdminController::class, 'index']), [$auth, $superadmin]);
+$router->get('/superadmin/usuarios', $wrap([SuperAdminController::class, 'usuarios']), [$auth, $superadmin]);
+$router->get('/superadmin/empresas', $wrap([SuperAdminController::class, 'empresas']), [$auth, $superadmin]);
+$router->get('/superadmin/logins', $wrap([SuperAdminController::class, 'logins']), [$auth, $superadmin]);
+$router->post('/superadmin/promover', $wrap([SuperAdminController::class, 'promover']), [$auth, $superadmin, $csrf]);
+$router->post('/superadmin/revogar', $wrap([SuperAdminController::class, 'revogar']), [$auth, $superadmin, $csrf]);
 
 $router->get('/notificacoes', $wrap([NotificacaoController::class, 'index']), [$auth]);
 $router->post('/notificacoes/{id}/lida', $wrap([NotificacaoController::class, 'marcarLida']), [$auth, $csrf]);
