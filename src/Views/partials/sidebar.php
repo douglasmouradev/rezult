@@ -35,8 +35,10 @@ $isActive = fn (string $path) => str_starts_with($current, $path)
 <div class="sidebar-overlay" aria-hidden="true"></div>
 <aside class="sidebar" id="sidebar">
     <div class="sidebar-brand">
-        <button type="button" class="sidebar-close menu-toggle-inner" aria-label="Fechar menu">
-            <i class="ph ph-x"></i>
+        <button type="button" class="sidebar-close" aria-label="Fechar menu">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/>
+            </svg>
         </button>
         <?php
         $asLink = true;

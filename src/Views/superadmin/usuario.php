@@ -6,8 +6,8 @@ $status = $svc->statusUsuario($usuario);
 $excluido = $status === 'excluido';
 ?>
 <div class="page-header">
-    <h1><?= htmlspecialchars($usuario['nome']) ?></h1>
-    <p class="text-muted"><?= htmlspecialchars($usuario['email']) ?> · ID #<?= (int)$usuario['id'] ?></p>
+    <h1><?= htmlspecialchars((string) ($usuario['nome'] ?? '')) ?></h1>
+    <p class="text-muted"><?= htmlspecialchars((string) ($usuario['email'] ?? '')) ?> · ID #<?= (int)($usuario['id'] ?? 0) ?></p>
 </div>
 
 <?php require __DIR__ . '/_nav.php'; ?>
@@ -21,9 +21,9 @@ $excluido = $status === 'excluido';
         <form method="post" action="/superadmin/usuarios/<?= (int)$usuario['id'] ?>">
             <input type="hidden" name="_csrf" value="<?= $csrf ?>">
             <label>Nome</label>
-            <input class="input" name="nome" value="<?= htmlspecialchars($usuario['nome']) ?>" required>
+            <input class="input" name="nome" value="<?= htmlspecialchars((string) ($usuario['nome'] ?? '')) ?>" required>
             <label class="mt-2">E-mail</label>
-            <input class="input" type="email" name="email" value="<?= htmlspecialchars($usuario['email']) ?>" required>
+            <input class="input" type="email" name="email" value="<?= htmlspecialchars((string) ($usuario['email'] ?? '')) ?>" required>
             <label class="mt-2 checkbox-label">
                 <input type="checkbox" name="email_verificado" value="1" <?= (int)($usuario['email_verificado'] ?? 0) ? 'checked' : '' ?>>
                 E-mail verificado
@@ -47,7 +47,7 @@ $excluido = $status === 'excluido';
     <div class="card">
         <h3>Informações</h3>
         <ul class="alert-list">
-            <li><strong>Cadastro:</strong> <?= date('d/m/Y H:i', strtotime($usuario['criado_em'])) ?></li>
+            <li><strong>Cadastro:</strong> <?= !empty($usuario['criado_em']) ? date('d/m/Y H:i', strtotime((string) $usuario['criado_em'])) : '—' ?></li>
             <li><strong>Último login:</strong> <?= !empty($usuario['ultimo_login_em']) ? date('d/m/Y H:i', strtotime($usuario['ultimo_login_em'])) : 'Nunca' ?></li>
             <li><strong>Status:</strong>
                 <?php if ($status === 'ativo'): ?><span class="badge badge-pago">Ativo</span>

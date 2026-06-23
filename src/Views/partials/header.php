@@ -15,8 +15,8 @@ $mesAtual = $meses[(int) date('n')] . ' ' . date('Y');
 ?>
 <header class="top-header">
     <div class="header-left">
-        <button type="button" class="menu-toggle" aria-label="Abrir menu">
-            <i class="ph ph-list"></i>
+        <button type="button" class="menu-toggle" aria-label="Abrir menu" aria-expanded="false">
+            <?php require __DIR__ . '/icon-menu.php'; ?>
         </button>
         <div>
             <h1 class="page-title"><?= htmlspecialchars($title ?? '') ?></h1>

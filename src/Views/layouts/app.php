@@ -11,7 +11,7 @@
     <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.45.0/dist/apexcharts.min.js" defer></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <link rel="manifest" href="/manifest.json">
-    <link rel="stylesheet" href="/assets/css/app.css?v=corp7">
+    <link rel="stylesheet" href="/assets/css/app.css?v=corp8">
 </head>
 <body>
 <div class="app-shell">
@@ -26,7 +26,7 @@
 </div>
 <div id="toast-container" class="toast-container"></div>
 <?php require __DIR__ . '/../partials/cookie-banner.php'; ?>
-<script src="/assets/js/app.js?v=6"></script>
+<script src="/assets/js/app.js?v=7"></script>
 <?php if (!empty($pageScripts)): ?><?= $pageScripts ?><?php endif; ?>
 </body>
 </html>

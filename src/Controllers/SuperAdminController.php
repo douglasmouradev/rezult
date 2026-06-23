@@ -80,18 +80,37 @@ final class SuperAdminController
 
     public function usuarioVer(int $id): void
     {
-        $usuario = $this->service->buscarUsuario($id);
-        if (!$usuario) {
-            Session::flash('error', 'Usuário não encontrado.');
+        try {
+            $usuario = $this->service->buscarUsuario($id);
+            if (!$usuario) {
+                Session::flash('error', 'Usuário não encontrado.');
+                View::redirect('/superadmin/usuarios');
+            }
+
+            $empresas = [];
+            $logins = [];
+            try {
+                $empresas = $this->service->empresasDoUsuario($id);
+            } catch (\Throwable) {
+                $empresas = [];
+            }
+            try {
+                $logins = $this->service->loginsDoUsuario((string) ($usuario['email'] ?? ''));
+            } catch (\Throwable) {
+                $logins = [];
+            }
+
+            View::render('superadmin/usuario', [
+                'title' => 'Usuário — Superadmin',
+                'usuario' => $usuario,
+                'empresas' => $empresas,
+                'logins' => $logins,
+            ]);
+        } catch (\Throwable $e) {
+            \App\Core\Logger::error('superadmin usuarioVer: ' . $e->getMessage(), ['id' => $id]);
+            Session::flash('error', 'Erro ao carregar usuário. Execute php bin/migrate.php no servidor.');
             View::redirect('/superadmin/usuarios');
         }
-
-        View::render('superadmin/usuario', [
-            'title' => 'Usuário — Superadmin',
-            'usuario' => $usuario,
-            'empresas' => $this->service->empresasDoUsuario($id),
-            'logins' => $this->service->loginsDoUsuario((string) $usuario['email']),
-        ]);
     }
 
     public function usuarioAtualizar(int $id): void

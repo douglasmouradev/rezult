@@ -74,12 +74,23 @@ final class SuperAdminService
     public function usuariosRecentes(int $limit = 10): array
     {
         $lim = $this->limiteSql($limit, 50);
+        $cols = ['u.id', 'u.nome', 'u.email', 'u.email_verificado'];
+        if ($this->temColuna('usuarios', 'ultimo_login_em')) {
+            $cols[] = 'u.ultimo_login_em';
+        }
+        if ($this->temColuna('usuarios', 'is_superadmin')) {
+            $cols[] = 'u.is_superadmin';
+        }
+        $order = $this->temColuna('usuarios', 'ultimo_login_em')
+            ? 'u.ultimo_login_em IS NULL, u.ultimo_login_em DESC, u.criado_em DESC'
+            : 'u.criado_em DESC';
+
         $stmt = App::pdo()->query(
-            'SELECT u.id, u.nome, u.email, u.ultimo_login_em, u.email_verificado, u.is_superadmin,
+            'SELECT ' . implode(', ', $cols) . ',
                     (SELECT COUNT(*) FROM usuario_empresa ue WHERE ue.usuario_id = u.id) AS empresas_qtd
              FROM usuarios u
              WHERE u.excluido_em IS NULL AND (u.anonimizado = 0 OR u.anonimizado IS NULL)
-             ORDER BY u.ultimo_login_em IS NULL, u.ultimo_login_em DESC, u.criado_em DESC
+             ORDER BY ' . $order . '
              LIMIT ' . $lim
         );
 
@@ -90,9 +101,18 @@ final class SuperAdminService
     public function listarUsuarios(?string $filtro = null): array
     {
         $temBloqueado = $this->temColuna('usuarios', 'bloqueado');
-        $cols = 'u.id, u.nome, u.email, u.email_verificado, u.is_superadmin, u.criado_em, u.ultimo_login_em, u.excluido_em';
+        $temUltimoLogin = $this->temColuna('usuarios', 'ultimo_login_em');
+        $temSuperadmin = $this->temColuna('usuarios', 'is_superadmin');
+
+        $cols = ['u.id', 'u.nome', 'u.email', 'u.email_verificado', 'u.criado_em', 'u.excluido_em'];
+        if ($temSuperadmin) {
+            $cols[] = 'u.is_superadmin';
+        }
+        if ($temUltimoLogin) {
+            $cols[] = 'u.ultimo_login_em';
+        }
         if ($temBloqueado) {
-            $cols .= ', u.bloqueado';
+            $cols[] = 'u.bloqueado';
         }
 
         if ($filtro === 'bloqueados' && $temBloqueado) {
@@ -101,7 +121,7 @@ final class SuperAdminService
             $where = 'WHERE u.excluido_em IS NOT NULL OR u.anonimizado = 1';
         } else {
             $where = 'WHERE u.excluido_em IS NULL AND (u.anonimizado = 0 OR u.anonimizado IS NULL)';
-            if ($filtro === 'ativos') {
+            if ($filtro === 'ativos' && $temUltimoLogin) {
                 $where .= ' AND u.ultimo_login_em >= DATE_SUB(NOW(), INTERVAL ' . self::ATIVO_DIAS . ' DAY)';
                 if ($temBloqueado) {
                     $where .= ' AND u.bloqueado = 0';
@@ -109,13 +129,15 @@ final class SuperAdminService
             }
         }
 
+        $order = $temUltimoLogin ? 'u.ultimo_login_em DESC, u.nome ASC' : 'u.nome ASC';
+
         $stmt = App::pdo()->query(
-            "SELECT {$cols},
+            'SELECT ' . implode(', ', $cols) . ',
                     (SELECT COUNT(*) FROM usuario_empresa ue WHERE ue.usuario_id = u.id) AS empresas_qtd,
                     (SELECT COUNT(*) FROM remember_tokens rt WHERE rt.usuario_id = u.id AND rt.expira_em > NOW()) AS sessoes_lembrar
              FROM usuarios u
-             {$where}
-             ORDER BY u.ultimo_login_em DESC, u.nome ASC"
+             ' . $where . '
+             ORDER BY ' . $order
         );
 
         return $stmt->fetchAll() ?: [];
@@ -187,16 +209,16 @@ final class SuperAdminService
         }
 
         $id = $model->criar($nome, $email, $senha);
-        $params = ['v' => $verificado ? 1 : 0, 's' => $superadmin ? 1 : 0, 'id' => $id];
-        if ($this->temColuna('usuarios', 'bloqueado')) {
-            App::pdo()->prepare(
-                'UPDATE usuarios SET email_verificado = :v, is_superadmin = :s, bloqueado = 0 WHERE id = :id'
-            )->execute($params);
-        } else {
-            App::pdo()->prepare(
-                'UPDATE usuarios SET email_verificado = :v, is_superadmin = :s WHERE id = :id'
-            )->execute($params);
+        $sets = ['email_verificado = :v'];
+        $params = ['v' => $verificado ? 1 : 0, 'id' => $id];
+        if ($this->temColuna('usuarios', 'is_superadmin')) {
+            $sets[] = 'is_superadmin = :s';
+            $params['s'] = $superadmin ? 1 : 0;
         }
+        if ($this->temColuna('usuarios', 'bloqueado')) {
+            $sets[] = 'bloqueado = 0';
+        }
+        App::pdo()->prepare('UPDATE usuarios SET ' . implode(', ', $sets) . ' WHERE id = :id')->execute($params);
 
         return $id;
     }
@@ -220,14 +242,17 @@ final class SuperAdminService
             throw new \InvalidArgumentException('E-mail já em uso por outro usuário.');
         }
 
-        $sql = 'UPDATE usuarios SET nome = :n, email = :e, email_verificado = :v, is_superadmin = :s';
+        $sql = 'UPDATE usuarios SET nome = :n, email = :e, email_verificado = :v';
         $params = [
             'n' => $nome,
             'e' => $email,
             'v' => !empty($dados['email_verificado']) ? 1 : 0,
-            's' => !empty($dados['is_superadmin']) ? 1 : 0,
             'id' => $id,
         ];
+        if ($this->temColuna('usuarios', 'is_superadmin')) {
+            $sql .= ', is_superadmin = :s';
+            $params['s'] = !empty($dados['is_superadmin']) ? 1 : 0;
+        }
         if ($this->temColuna('usuarios', 'bloqueado')) {
             $sql .= ', bloqueado = :b';
             $params['b'] = !empty($dados['bloqueado']) ? 1 : 0;

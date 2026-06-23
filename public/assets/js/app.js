@@ -87,12 +87,25 @@ function initSidebar() {
     if (e.key === 'Escape') close();
   });
 
+  const applyInitialState = () => {
+    if (isMobile()) {
+      setMobileOpen(false);
+    } else if (window.innerWidth < 1280) {
+      setDesktopCollapsed(true);
+    } else {
+      setDesktopCollapsed(false);
+    }
+  };
+
   mq.addEventListener('change', () => {
     setMobileOpen(false);
     shell.classList.remove('sidebar-collapsed');
     document.body.style.overflow = '';
     document.body.classList.remove('sidebar-open');
+    applyInitialState();
   });
+
+  applyInitialState();
 }
 
 /* Confirmação */
