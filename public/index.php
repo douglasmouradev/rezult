@@ -14,6 +14,24 @@ ErrorHandler::register();
 
 $uri = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
 
+// Favicon e ícones na raiz de public/
+$rootStatic = [
+    '/favicon.ico' => 'image/x-icon',
+    '/favicon.png' => 'image/png',
+    '/favicon-16x16.png' => 'image/png',
+    '/favicon-32x32.png' => 'image/png',
+    '/apple-touch-icon.png' => 'image/png',
+];
+if (isset($rootStatic[$uri])) {
+    $file = __DIR__ . $uri;
+    if (is_file($file)) {
+        header('Content-Type: ' . $rootStatic[$uri]);
+        header('Cache-Control: public, max-age=604800');
+        readfile($file);
+        exit;
+    }
+}
+
 // Assets estáticos públicos
 if (str_starts_with($uri, '/assets/')) {
     $base = realpath(__DIR__ . '/assets');
