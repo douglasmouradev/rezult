@@ -90,6 +90,14 @@ $router->post('/perfil/senha', $wrap([PerfilController::class, 'senha']), [$auth
 
 $router->get('/superadmin', $wrap([SuperAdminController::class, 'index']), [$auth, $superadmin]);
 $router->get('/superadmin/usuarios', $wrap([SuperAdminController::class, 'usuarios']), [$auth, $superadmin]);
+$router->get('/superadmin/usuarios/criar', $wrap([SuperAdminController::class, 'usuarioCriarForm']), [$auth, $superadmin]);
+$router->post('/superadmin/usuarios', $wrap([SuperAdminController::class, 'usuarioCriar']), [$auth, $superadmin, $csrf]);
+$router->get('/superadmin/usuarios/{id}', $wrap([SuperAdminController::class, 'usuarioVer']), [$auth, $superadmin]);
+$router->post('/superadmin/usuarios/{id}', $wrap([SuperAdminController::class, 'usuarioAtualizar']), [$auth, $superadmin, $csrf]);
+$router->post('/superadmin/usuarios/{id}/senha', $wrap([SuperAdminController::class, 'usuarioSenha']), [$auth, $superadmin, $csrf]);
+$router->post('/superadmin/usuarios/{id}/bloquear', $wrap([SuperAdminController::class, 'usuarioBloquear']), [$auth, $superadmin, $csrf]);
+$router->post('/superadmin/usuarios/{id}/sessoes', $wrap([SuperAdminController::class, 'usuarioSessoes']), [$auth, $superadmin, $csrf]);
+$router->post('/superadmin/usuarios/{id}/excluir', $wrap([SuperAdminController::class, 'usuarioExcluir']), [$auth, $superadmin, $csrf]);
 $router->get('/superadmin/empresas', $wrap([SuperAdminController::class, 'empresas']), [$auth, $superadmin]);
 $router->post('/superadmin/empresas/atualizar', $wrap([SuperAdminController::class, 'atualizarEmpresa']), [$auth, $superadmin, $csrf]);
 $router->post('/superadmin/empresas/status', $wrap([SuperAdminController::class, 'alternarAtivo']), [$auth, $superadmin, $csrf]);

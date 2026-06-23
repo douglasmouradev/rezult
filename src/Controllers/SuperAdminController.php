@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Core\View;
+use App\Helpers\Sanitize;
+use App\Helpers\Session;
+use App\Helpers\Validator;
 use App\Services\AuditoriaService;
 use App\Services\SuperAdminService;
 
@@ -25,10 +28,156 @@ final class SuperAdminController
 
     public function usuarios(): void
     {
+        $filtro = $_GET['filtro'] ?? '';
+        if (!in_array($filtro, ['', 'ativos', 'bloqueados', 'excluidos'], true)) {
+            $filtro = '';
+        }
+
         View::render('superadmin/usuarios', [
             'title' => 'Usuários — Superadmin',
-            'usuarios' => $this->service->listarUsuarios(),
+            'usuarios' => $this->service->listarUsuarios($filtro !== '' ? $filtro : null),
+            'filtro' => $filtro,
         ]);
+    }
+
+    public function usuarioCriarForm(): void
+    {
+        View::render('superadmin/usuario-form', [
+            'title' => 'Novo usuário — Superadmin',
+            'usuario' => null,
+        ]);
+    }
+
+    public function usuarioCriar(): void
+    {
+        $v = new Validator($_POST);
+        $v->required('nome', 'email', 'senha', 'senha_confirmacao')->email('email')->password('senha');
+        if (($_POST['senha'] ?? '') !== ($_POST['senha_confirmacao'] ?? '')) {
+            Session::flash('error', 'As senhas não coincidem.');
+            View::redirect('/superadmin/usuarios/criar');
+        }
+        if ($v->fails()) {
+            Session::flash('error', $v->first());
+            View::redirect('/superadmin/usuarios/criar');
+        }
+
+        try {
+            $id = $this->service->criarUsuario(
+                Sanitize::raw($_POST['nome']),
+                Sanitize::raw($_POST['email']),
+                $_POST['senha'],
+                !empty($_POST['email_verificado']),
+                !empty($_POST['is_superadmin']),
+            );
+            AuditoriaService::registrar('superadmin_usuario_criado', 'usuario', $id);
+            Session::flash('success', 'Usuário criado.');
+            View::redirect('/superadmin/usuarios/' . $id);
+        } catch (\InvalidArgumentException $e) {
+            Session::flash('error', $e->getMessage());
+            View::redirect('/superadmin/usuarios/criar');
+        }
+    }
+
+    public function usuarioVer(int $id): void
+    {
+        $usuario = $this->service->buscarUsuario($id);
+        if (!$usuario) {
+            Session::flash('error', 'Usuário não encontrado.');
+            View::redirect('/superadmin/usuarios');
+        }
+
+        View::render('superadmin/usuario', [
+            'title' => 'Usuário — Superadmin',
+            'usuario' => $usuario,
+            'empresas' => $this->service->empresasDoUsuario($id),
+            'logins' => $this->service->loginsDoUsuario((string) $usuario['email']),
+        ]);
+    }
+
+    public function usuarioAtualizar(int $id): void
+    {
+        $meuId = (int) Session::get('usuario_id');
+        if ($id === $meuId && empty($_POST['is_superadmin'])) {
+            Session::flash('error', 'Você não pode remover seu próprio superadmin.');
+            View::redirect('/superadmin/usuarios/' . $id);
+        }
+
+        try {
+            if (!$this->service->atualizarUsuario($id, $_POST)) {
+                Session::flash('error', 'Usuário não encontrado ou excluído.');
+                View::redirect('/superadmin/usuarios');
+            }
+            AuditoriaService::registrar('superadmin_usuario_atualizado', 'usuario', $id);
+            Session::flash('success', 'Usuário atualizado.');
+        } catch (\InvalidArgumentException $e) {
+            Session::flash('error', $e->getMessage());
+        }
+
+        View::redirect('/superadmin/usuarios/' . $id);
+    }
+
+    public function usuarioSenha(int $id): void
+    {
+        $v = new Validator($_POST);
+        $v->required('senha', 'senha_confirmacao')->password('senha');
+        if (($_POST['senha'] ?? '') !== ($_POST['senha_confirmacao'] ?? '')) {
+            Session::flash('error', 'As senhas não coincidem.');
+            View::redirect('/superadmin/usuarios/' . $id);
+        }
+        if ($v->fails()) {
+            Session::flash('error', $v->first());
+            View::redirect('/superadmin/usuarios/' . $id);
+        }
+
+        if (!$this->service->redefinirSenha($id, $_POST['senha'])) {
+            Session::flash('error', 'Não foi possível redefinir a senha.');
+            View::redirect('/superadmin/usuarios');
+        }
+
+        $this->service->encerrarSessoes($id);
+        AuditoriaService::registrar('superadmin_senha_redefinida', 'usuario', $id);
+        Session::flash('success', 'Senha redefinida e sessões encerradas.');
+        View::redirect('/superadmin/usuarios/' . $id);
+    }
+
+    public function usuarioBloquear(int $id): void
+    {
+        $meuId = (int) Session::get('usuario_id');
+        if ($id === $meuId) {
+            Session::flash('error', 'Você não pode bloquear a si mesmo.');
+            View::redirect('/superadmin/usuarios/' . $id);
+        }
+
+        $bloqueado = $this->service->alternarBloqueio($id);
+        AuditoriaService::registrar($bloqueado ? 'superadmin_usuario_bloqueado' : 'superadmin_usuario_desbloqueado', 'usuario', $id);
+        Session::flash('success', $bloqueado ? 'Usuário bloqueado.' : 'Usuário desbloqueado.');
+        View::redirect('/superadmin/usuarios/' . $id);
+    }
+
+    public function usuarioSessoes(int $id): void
+    {
+        $this->service->encerrarSessoes($id);
+        AuditoriaService::registrar('superadmin_sessoes_encerradas', 'usuario', $id);
+        Session::flash('success', 'Sessões e tokens encerrados.');
+        View::redirect('/superadmin/usuarios/' . $id);
+    }
+
+    public function usuarioExcluir(int $id): void
+    {
+        $meuId = (int) Session::get('usuario_id');
+        if ($id === $meuId) {
+            Session::flash('error', 'Você não pode excluir a si mesmo.');
+            View::redirect('/superadmin/usuarios/' . $id);
+        }
+
+        if (!$this->service->excluirUsuario($id)) {
+            Session::flash('error', 'Não foi possível excluir o usuário.');
+            View::redirect('/superadmin/usuarios');
+        }
+
+        AuditoriaService::registrar('superadmin_usuario_excluido', 'usuario', $id);
+        Session::flash('success', 'Usuário excluído e anonimizado (LGPD).');
+        View::redirect('/superadmin/usuarios');
     }
 
     public function empresas(): void
@@ -50,7 +199,7 @@ final class SuperAdminController
     {
         $id = (int) ($_POST['empresa_id'] ?? 0);
         if ($id <= 0) {
-            \App\Helpers\Session::flash('error', 'Loja inválida.');
+            Session::flash('error', 'Loja inválida.');
             View::redirect('/superadmin/empresas');
         }
 
@@ -60,7 +209,7 @@ final class SuperAdminController
             'ativo' => !empty($_POST['ativo']),
             'plano_ativo' => !empty($_POST['plano_ativo']),
         ]);
-        \App\Helpers\Session::flash('success', 'Loja atualizada.');
+        Session::flash('success', 'Loja atualizada.');
         View::redirect('/superadmin/empresas');
     }
 
@@ -68,13 +217,13 @@ final class SuperAdminController
     {
         $id = (int) ($_POST['empresa_id'] ?? 0);
         if ($id <= 0) {
-            \App\Helpers\Session::flash('error', 'Loja inválida.');
+            Session::flash('error', 'Loja inválida.');
             View::redirect('/superadmin/empresas');
         }
 
         $ativo = $this->service->alternarAtivo($id);
         AuditoriaService::registrar($ativo ? 'superadmin_loja_ativada' : 'superadmin_loja_desabilitada', 'empresa', $id);
-        \App\Helpers\Session::flash('success', $ativo ? 'Loja reativada.' : 'Loja desabilitada.');
+        Session::flash('success', $ativo ? 'Loja reativada.' : 'Loja desabilitada.');
         View::redirect('/superadmin/empresas');
     }
 
@@ -82,13 +231,13 @@ final class SuperAdminController
     {
         $id = (int) ($_POST['empresa_id'] ?? 0);
         if ($id <= 0) {
-            \App\Helpers\Session::flash('error', 'Loja inválida.');
+            Session::flash('error', 'Loja inválida.');
             View::redirect('/superadmin/empresas');
         }
 
         $ativo = $this->service->alternarPlanoAtivo($id);
         AuditoriaService::registrar($ativo ? 'superadmin_plano_ativado' : 'superadmin_plano_desativado', 'empresa', $id);
-        \App\Helpers\Session::flash('success', $ativo ? 'Plano ativado.' : 'Plano desativado.');
+        Session::flash('success', $ativo ? 'Plano ativado.' : 'Plano desativado.');
         View::redirect('/superadmin/empresas');
     }
 
@@ -104,7 +253,7 @@ final class SuperAdminController
     {
         $usuarioId = (int) ($_POST['usuario_id'] ?? 0);
         if ($usuarioId <= 0) {
-            \App\Helpers\Session::flash('error', 'Usuário inválido.');
+            Session::flash('error', 'Usuário inválido.');
             View::redirect('/superadmin/usuarios');
         }
 
@@ -112,17 +261,17 @@ final class SuperAdminController
             ->execute(['id' => $usuarioId]);
 
         AuditoriaService::registrar('superadmin_promovido', 'usuario', $usuarioId);
-        \App\Helpers\Session::flash('success', 'Usuário promovido a superadmin.');
-        View::redirect('/superadmin/usuarios');
+        Session::flash('success', 'Usuário promovido a superadmin.');
+        View::redirect($_POST['redirect'] ?? '/superadmin/usuarios');
     }
 
     public function revogar(): void
     {
         $usuarioId = (int) ($_POST['usuario_id'] ?? 0);
-        $meuId = (int) \App\Helpers\Session::get('usuario_id');
+        $meuId = (int) Session::get('usuario_id');
 
         if ($usuarioId <= 0 || $usuarioId === $meuId) {
-            \App\Helpers\Session::flash('error', 'Não é possível revogar este usuário.');
+            Session::flash('error', 'Não é possível revogar este usuário.');
             View::redirect('/superadmin/usuarios');
         }
 
@@ -130,7 +279,7 @@ final class SuperAdminController
             ->execute(['id' => $usuarioId]);
 
         AuditoriaService::registrar('superadmin_revogado', 'usuario', $usuarioId);
-        \App\Helpers\Session::flash('success', 'Superadmin revogado.');
-        View::redirect('/superadmin/usuarios');
+        Session::flash('success', 'Superadmin revogado.');
+        View::redirect($_POST['redirect'] ?? '/superadmin/usuarios');
     }
 }

@@ -53,6 +53,11 @@ final class AuthController
             View::redirect('/login');
         }
 
+        if (!empty($usuario['bloqueado'])) {
+            Session::flash('error', 'Conta bloqueada. Entre em contato com o suporte.');
+            View::redirect('/login');
+        }
+
         if (!(int) $usuario['email_verificado']) {
             Session::flash('error', 'Confirme seu e-mail antes de entrar.');
             View::redirect('/login');

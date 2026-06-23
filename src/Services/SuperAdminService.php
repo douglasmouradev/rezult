@@ -70,18 +70,187 @@ final class SuperAdminService
     }
 
     /** @return list<array<string, mixed>> */
-    public function listarUsuarios(): array
+    public function listarUsuarios(?string $filtro = null): array
     {
+        $where = 'WHERE u.anonimizado = 0 OR u.anonimizado IS NULL';
+        if ($filtro === 'bloqueados') {
+            $where = 'WHERE u.bloqueado = 1 AND u.excluido_em IS NULL AND (u.anonimizado = 0 OR u.anonimizado IS NULL)';
+        } elseif ($filtro === 'excluidos') {
+            $where = 'WHERE u.excluido_em IS NOT NULL OR u.anonimizado = 1';
+        } else {
+            $where = 'WHERE u.excluido_em IS NULL AND (u.anonimizado = 0 OR u.anonimizado IS NULL)';
+            if ($filtro === 'ativos') {
+                $where .= ' AND u.bloqueado = 0 AND u.ultimo_login_em >= DATE_SUB(NOW(), INTERVAL ' . self::ATIVO_DIAS . ' DAY)';
+            }
+        }
+
         $stmt = App::pdo()->query(
-            'SELECT u.id, u.nome, u.email, u.email_verificado, u.is_superadmin, u.criado_em, u.ultimo_login_em,
+            "SELECT u.id, u.nome, u.email, u.email_verificado, u.is_superadmin, u.bloqueado, u.criado_em, u.ultimo_login_em, u.excluido_em,
                     (SELECT COUNT(*) FROM usuario_empresa ue WHERE ue.usuario_id = u.id) AS empresas_qtd,
                     (SELECT COUNT(*) FROM remember_tokens rt WHERE rt.usuario_id = u.id AND rt.expira_em > NOW()) AS sessoes_lembrar
              FROM usuarios u
-             WHERE u.excluido_em IS NULL AND (u.anonimizado = 0 OR u.anonimizado IS NULL)
-             ORDER BY u.ultimo_login_em DESC, u.nome ASC'
+             {$where}
+             ORDER BY u.ultimo_login_em DESC, u.nome ASC"
         );
 
         return $stmt->fetchAll() ?: [];
+    }
+
+    public function buscarUsuario(int $id, bool $incluirExcluido = true): ?array
+    {
+        $sql = 'SELECT u.*,
+                    (SELECT COUNT(*) FROM usuario_empresa ue WHERE ue.usuario_id = u.id) AS empresas_qtd,
+                    (SELECT COUNT(*) FROM remember_tokens rt WHERE rt.usuario_id = u.id AND rt.expira_em > NOW()) AS sessoes_lembrar
+                FROM usuarios u WHERE u.id = :id';
+        if (!$incluirExcluido) {
+            $sql .= ' AND u.excluido_em IS NULL AND (u.anonimizado = 0 OR u.anonimizado IS NULL)';
+        }
+        $stmt = App::pdo()->prepare($sql . ' LIMIT 1');
+        $stmt->execute(['id' => $id]);
+        $row = $stmt->fetch();
+
+        return $row ?: null;
+    }
+
+    /** @return list<array<string, mixed>> */
+    public function empresasDoUsuario(int $usuarioId): array
+    {
+        $stmt = App::pdo()->prepare(
+            'SELECT e.id, e.nome, e.plano, e.ativo, e.plano_ativo, e.plano_expira_em, ue.papel
+             FROM usuario_empresa ue
+             INNER JOIN empresas e ON e.id = ue.empresa_id
+             WHERE ue.usuario_id = :u
+             ORDER BY e.nome'
+        );
+        $stmt->execute(['u' => $usuarioId]);
+
+        return $stmt->fetchAll() ?: [];
+    }
+
+    /** @return list<array<string, mixed>> */
+    public function loginsDoUsuario(string $email, int $limit = 50): array
+    {
+        $stmt = App::pdo()->prepare(
+            'SELECT id, email, ip, sucesso, criado_em FROM login_tentativas
+             WHERE email = :e ORDER BY criado_em DESC LIMIT :lim'
+        );
+        $stmt->bindValue('e', $email);
+        $stmt->bindValue('lim', $limit, \PDO::PARAM_INT);
+        $stmt->execute();
+
+        return $stmt->fetchAll() ?: [];
+    }
+
+    public function criarUsuario(string $nome, string $email, string $senha, bool $verificado = true, bool $superadmin = false): int
+    {
+        $model = new \App\Models\Usuario();
+        if ($model->findByEmail($email)) {
+            throw new \InvalidArgumentException('E-mail já cadastrado.');
+        }
+
+        $id = $model->criar($nome, $email, $senha);
+        App::pdo()->prepare(
+            'UPDATE usuarios SET email_verificado = :v, is_superadmin = :s, bloqueado = 0 WHERE id = :id'
+        )->execute(['v' => $verificado ? 1 : 0, 's' => $superadmin ? 1 : 0, 'id' => $id]);
+
+        return $id;
+    }
+
+    public function atualizarUsuario(int $id, array $dados): bool
+    {
+        $usuario = $this->buscarUsuario($id);
+        if (!$usuario || !empty($usuario['excluido_em']) || (int) ($usuario['anonimizado'] ?? 0) === 1) {
+            return false;
+        }
+
+        $nome = trim((string) ($dados['nome'] ?? ''));
+        $email = strtolower(trim((string) ($dados['email'] ?? '')));
+        if ($nome === '' || $email === '') {
+            throw new \InvalidArgumentException('Nome e e-mail são obrigatórios.');
+        }
+
+        $dup = App::pdo()->prepare('SELECT id FROM usuarios WHERE LOWER(email) = :e AND id != :id LIMIT 1');
+        $dup->execute(['e' => $email, 'id' => $id]);
+        if ($dup->fetch()) {
+            throw new \InvalidArgumentException('E-mail já em uso por outro usuário.');
+        }
+
+        App::pdo()->prepare(
+            'UPDATE usuarios SET nome = :n, email = :e, email_verificado = :v, is_superadmin = :s, bloqueado = :b WHERE id = :id'
+        )->execute([
+            'n' => $nome,
+            'e' => $email,
+            'v' => !empty($dados['email_verificado']) ? 1 : 0,
+            's' => !empty($dados['is_superadmin']) ? 1 : 0,
+            'b' => !empty($dados['bloqueado']) ? 1 : 0,
+            'id' => $id,
+        ]);
+
+        return true;
+    }
+
+    public function redefinirSenha(int $id, string $senha): bool
+    {
+        $usuario = $this->buscarUsuario($id, false);
+        if (!$usuario || !empty($usuario['excluido_em'])) {
+            return false;
+        }
+
+        App::pdo()->prepare('UPDATE usuarios SET senha_hash = :h WHERE id = :id')->execute([
+            'h' => password_hash($senha, PASSWORD_BCRYPT, ['cost' => 12]),
+            'id' => $id,
+        ]);
+
+        return true;
+    }
+
+    public function alternarBloqueio(int $id): bool
+    {
+        $usuario = $this->buscarUsuario($id);
+        if (!$usuario) {
+            return false;
+        }
+
+        $novo = (int) ($usuario['bloqueado'] ?? 0) === 1 ? 0 : 1;
+        App::pdo()->prepare('UPDATE usuarios SET bloqueado = :b WHERE id = :id')->execute(['b' => $novo, 'id' => $id]);
+        if ($novo === 1) {
+            $this->encerrarSessoes($id);
+        }
+
+        return $novo === 1;
+    }
+
+    public function encerrarSessoes(int $id): void
+    {
+        App::pdo()->prepare('DELETE FROM remember_tokens WHERE usuario_id = :id')->execute(['id' => $id]);
+        App::pdo()->prepare('DELETE FROM tokens_email WHERE usuario_id = :id')->execute(['id' => $id]);
+    }
+
+    public function excluirUsuario(int $id): bool
+    {
+        $usuario = $this->buscarUsuario($id);
+        if (!$usuario || !empty($usuario['excluido_em'])) {
+            return false;
+        }
+
+        (new \App\Services\LgpdService())->processarExclusaoConta($id);
+
+        return true;
+    }
+
+    public function statusUsuario(array $usuario): string
+    {
+        if (!empty($usuario['excluido_em']) || (int) ($usuario['anonimizado'] ?? 0) === 1) {
+            return 'excluido';
+        }
+        if ((int) ($usuario['bloqueado'] ?? 0) === 1) {
+            return 'bloqueado';
+        }
+        if ($this->estaAtivo($usuario['ultimo_login_em'] ?? null)) {
+            return 'ativo';
+        }
+
+        return 'inativo';
     }
 
     /** @return list<array<string, mixed>> */
