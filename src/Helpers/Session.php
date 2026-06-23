@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Helpers;
 
+use App\Core\App;
+
 final class Session
 {
     public static function start(int $lifetime = 7200): void
@@ -12,15 +14,41 @@ final class Session
             return;
         }
 
+        $savePath = App::basePath() . '/storage/sessions';
+        if (!is_dir($savePath)) {
+            mkdir($savePath, 0755, true);
+        }
+        if (is_writable($savePath)) {
+            session_save_path($savePath);
+        }
+
         ini_set('session.cookie_httponly', '1');
         ini_set('session.cookie_samesite', 'Lax');
         ini_set('session.use_strict_mode', '1');
         ini_set('session.gc_maxlifetime', (string) $lifetime);
-        if (($_ENV['APP_ENV'] ?? '') === 'production') {
+        ini_set('session.cookie_path', '/');
+
+        if (self::requestIsHttps()) {
             ini_set('session.cookie_secure', '1');
         }
 
         session_start();
+    }
+
+    public static function requestIsHttps(): bool
+    {
+        if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') {
+            return true;
+        }
+
+        $proto = strtolower((string) ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? ''));
+        if ($proto === 'https') {
+            return true;
+        }
+
+        $port = (int) ($_SERVER['SERVER_PORT'] ?? 0);
+
+        return $port === 443;
     }
 
     public static function get(string $key, mixed $default = null): mixed

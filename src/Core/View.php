@@ -23,6 +23,10 @@ final class View
         $podeGerenciar = $empresaId > 0 && \App\Policies\TenantPolicy::podeGerenciarConfig($empresaId);
         $podeAprovar = $empresaId > 0 && (\App\Policies\TenantPolicy::papel($empresaId)?->podeAprovarLancamento() ?? false);
         $isSuperadmin = \App\Policies\SuperAdminPolicy::isSuperadmin();
+        $navSemEmpresa = (new \App\Services\TenantSessionService())->urlNavegacaoSemEmpresa();
+        $navUrl = static fn (string $path): string => $navSemEmpresa !== '' && $path !== '/empresas' && !str_starts_with($path, '/privacidade') && !str_starts_with($path, '/superadmin')
+            ? $navSemEmpresa
+            : $path;
         $notifCount = 0;
         if ($usuario) {
             try {
@@ -61,7 +65,7 @@ final class View
 
     public static function redirect(string $path): never
     {
-        header('Location: ' . App::config('url') . $path);
+        header('Location: ' . $path);
         exit;
     }
 }

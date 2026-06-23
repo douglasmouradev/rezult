@@ -32,6 +32,7 @@ php bin/migrate.php
 
 echo "==> permissões storage"
 chmod -R 775 storage 2>/dev/null || true
+mkdir -p storage/sessions && chmod 775 storage/sessions 2>/dev/null || true
 
 echo "==> deploy concluído"
 echo "    Crons sugeridos:"

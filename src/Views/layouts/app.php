@@ -20,6 +20,17 @@
         <?php require __DIR__ . '/../partials/header.php'; ?>
         <main class="page-content">
             <?php require __DIR__ . '/../partials/flash.php'; ?>
+            <?php if (!empty($navSemEmpresa) && ($navSemEmpresa === '/empresas/criar' || $navSemEmpresa === '/empresas')): ?>
+<div class="card mb-2" style="background:var(--surface-2);border-color:var(--primary)">
+    <p style="margin:0">
+        <?php if ($navSemEmpresa === '/empresas/criar'): ?>
+        <strong>Configure sua empresa</strong> para liberar o dashboard, lançamentos e relatórios. Use o menu <em>Empresas</em> ou preencha o formulário abaixo.
+        <?php else: ?>
+        <strong>Nenhuma loja ativa.</strong> Acesse <a href="/empresas">Empresas</a> para verificar o status do plano ou fale com o suporte.
+        <?php endif; ?>
+    </p>
+</div>
+<?php endif; ?>
             <?= $content ?>
         </main>
     </div>

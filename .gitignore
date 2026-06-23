@@ -13,3 +13,5 @@
 !/storage/logs/.gitkeep
 /storage/mail/*
 !/storage/mail/.gitkeep
+/storage/sessions/*
+!/storage/sessions/.gitkeep

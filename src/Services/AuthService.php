@@ -192,7 +192,7 @@ final class AuthService
             'path' => '/',
             'httponly' => true,
             'samesite' => 'Lax',
-            'secure' => App::config('env') === 'production',
+            'secure' => \App\Helpers\Session::requestIsHttps(),
         ]);
     }
 

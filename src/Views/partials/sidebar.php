@@ -42,7 +42,7 @@ $isActive = fn (string $path) => str_starts_with($current, $path)
         </button>
         <?php
         $asLink = true;
-        $href = '/dashboard';
+        $href = $navUrl('/dashboard');
         $class = 'brand-logo--sidebar';
         $imgClass = 'brand-logo__img--sidebar';
         $showText = false;
@@ -55,7 +55,7 @@ $isActive = fn (string $path) => str_starts_with($current, $path)
     <p class="sidebar-section">Financeiro</p>
     <nav class="sidebar-nav">
         <?php foreach ($navMain as [$path, $icon, $label]): ?>
-        <a href="<?= $path ?>" class="nav-item <?= $isActive($path) ? 'active' : '' ?>">
+        <a href="<?= $navUrl($path) ?>" class="nav-item <?= $isActive($path) ? 'active' : '' ?>">
             <i class="ph ph-<?= $icon ?>"></i>
             <span><?= $label ?></span>
         </a>
@@ -65,7 +65,7 @@ $isActive = fn (string $path) => str_starts_with($current, $path)
     <p class="sidebar-section">Avançado</p>
     <nav class="sidebar-nav">
         <?php foreach ($navAvancado as [$path, $icon, $label]): ?>
-        <a href="<?= $path ?>" class="nav-item <?= $isActive($path) ? 'active' : '' ?>">
+        <a href="<?= $navUrl($path) ?>" class="nav-item <?= $isActive($path) ? 'active' : '' ?>">
             <i class="ph ph-<?= $icon ?>"></i>
             <span><?= $label ?></span>
         </a>
@@ -92,16 +92,16 @@ $isActive = fn (string $path) => str_starts_with($current, $path)
     <?php if (!empty($podeGerenciar)): ?>
     <p class="sidebar-section">Administração</p>
     <nav class="sidebar-nav">
-        <a href="/equipe" class="nav-item <?= str_starts_with($current, '/equipe') ? 'active' : '' ?>">
+        <a href="<?= $navUrl('/equipe') ?>" class="nav-item <?= str_starts_with($current, '/equipe') ? 'active' : '' ?>">
             <i class="ph ph-users"></i><span>Equipe</span>
         </a>
-        <a href="/auditoria" class="nav-item <?= str_starts_with($current, '/auditoria') ? 'active' : '' ?>">
+        <a href="<?= $navUrl('/auditoria') ?>" class="nav-item <?= str_starts_with($current, '/auditoria') ? 'active' : '' ?>">
             <i class="ph ph-list-checks"></i><span>Auditoria</span>
         </a>
-        <a href="/api/tokens" class="nav-item <?= str_starts_with($current, '/api') ? 'active' : '' ?>">
+        <a href="<?= $navUrl('/api/tokens') ?>" class="nav-item <?= str_starts_with($current, '/api') ? 'active' : '' ?>">
             <i class="ph ph-code"></i><span>API</span>
         </a>
-        <a href="/webhooks" class="nav-item <?= str_starts_with($current, '/webhooks') ? 'active' : '' ?>">
+        <a href="<?= $navUrl('/webhooks') ?>" class="nav-item <?= str_starts_with($current, '/webhooks') ? 'active' : '' ?>">
             <i class="ph ph-webhooks-logo"></i><span>Webhooks</span>
         </a>
     </nav>
@@ -110,7 +110,7 @@ $isActive = fn (string $path) => str_starts_with($current, $path)
     <p class="sidebar-section">Configuração</p>
     <nav class="sidebar-nav">
         <?php foreach ($navConfig as [$path, $icon, $label]): ?>
-        <a href="<?= $path ?>" class="nav-item <?= $isActive($path) ? 'active' : '' ?>">
+        <a href="<?= $navUrl($path) ?>" class="nav-item <?= $isActive($path) ? 'active' : '' ?>">
             <i class="ph ph-<?= $icon ?>"></i>
             <span><?= $label ?></span>
         </a>
@@ -120,7 +120,7 @@ $isActive = fn (string $path) => str_starts_with($current, $path)
     <p class="sidebar-section">Relatórios</p>
     <nav class="sidebar-nav">
         <?php foreach ($navRelatorios as [$path, $icon, $label]): ?>
-        <a href="<?= $path ?>" class="nav-item <?= $isActive($path) ? 'active' : '' ?>">
+        <a href="<?= $navUrl($path) ?>" class="nav-item <?= $isActive($path) ? 'active' : '' ?>">
             <i class="ph ph-<?= $icon ?>"></i>
             <span><?= $label ?></span>
         </a>

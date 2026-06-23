@@ -38,6 +38,8 @@ final class AuthMiddleware
             // Coluna bloqueado pode não existir antes da migration 013
         }
 
+        (new \App\Services\TenantSessionService())->sincronizar();
+
         $next();
     }
 }
