@@ -14,21 +14,29 @@ ErrorHandler::register();
 
 $uri = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
 
-// Favicon e ícones na raiz de public/
-$rootStatic = [
-    '/favicon.ico' => 'image/x-icon',
-    '/favicon.png' => 'image/png',
-    '/favicon-16x16.png' => 'image/png',
-    '/favicon-32x32.png' => 'image/png',
-    '/apple-touch-icon.png' => 'image/png',
+$iconTypes = [
+    'ico' => 'image/x-icon',
+    'png' => 'image/png',
 ];
-if (isset($rootStatic[$uri])) {
-    $file = __DIR__ . $uri;
-    if (is_file($file)) {
-        header('Content-Type: ' . $rootStatic[$uri]);
-        header('Cache-Control: public, max-age=604800');
-        readfile($file);
-        exit;
+
+// Favicon na raiz — tenta public/ e fallback em assets/img/
+$rootIcons = [
+    '/favicon.ico',
+    '/favicon.png',
+    '/favicon-16x16.png',
+    '/favicon-32x32.png',
+    '/apple-touch-icon.png',
+];
+if (in_array($uri, $rootIcons, true)) {
+    $basename = basename($uri);
+    $ext = pathinfo($basename, PATHINFO_EXTENSION);
+    foreach ([__DIR__ . '/' . $basename, __DIR__ . '/assets/img/' . $basename] as $file) {
+        if (is_file($file)) {
+            header('Content-Type: ' . ($iconTypes[$ext] ?? 'application/octet-stream'));
+            header('Cache-Control: public, max-age=604800');
+            readfile($file);
+            exit;
+        }
     }
 }
 
@@ -37,8 +45,17 @@ if (str_starts_with($uri, '/assets/')) {
     $base = realpath(__DIR__ . '/assets');
     $file = realpath(__DIR__ . $uri);
     if ($base && $file && str_starts_with($file, $base) && is_file($file)) {
-        $types = ['css' => 'text/css', 'js' => 'application/javascript', 'png' => 'image/png', 'jpg' => 'image/jpeg', 'webp' => 'image/webp'];
+        $types = [
+            'css' => 'text/css',
+            'js' => 'application/javascript',
+            'png' => 'image/png',
+            'jpg' => 'image/jpeg',
+            'webp' => 'image/webp',
+            'ico' => 'image/x-icon',
+            'svg' => 'image/svg+xml',
+        ];
         header('Content-Type: ' . ($types[pathinfo($file, PATHINFO_EXTENSION)] ?? 'application/octet-stream'));
+        header('Cache-Control: public, max-age=604800');
         readfile($file);
         exit;
     }

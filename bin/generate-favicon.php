@@ -3,11 +3,12 @@
 declare(strict_types=1);
 
 /**
- * Gera favicon.png, apple-touch-icon.png e favicon.ico a partir do logo Rezult.
+ * Gera favicons a partir do logo Rezult em public/assets/img/ (servidos pelo nginx).
  */
 $root = dirname(__DIR__);
 $srcPath = $root . '/public/assets/img/logo-rezult.png';
-$outDir = $root . '/public';
+$outDir = $root . '/public/assets/img';
+$publicDir = $root . '/public';
 
 if (!is_file($srcPath)) {
     fwrite(STDERR, "Logo não encontrado: {$srcPath}\n");
@@ -58,7 +59,6 @@ foreach ($sizes as $name => $size) {
     echo "Gerado: {$path}\n";
 }
 
-// ICO com PNG embutido (suportado por navegadores modernos)
 $png32 = $outDir . '/favicon-32x32.png';
 $pngData = file_get_contents($png32);
 if ($pngData === false) {
@@ -72,14 +72,14 @@ $ico .= $pngData;
 file_put_contents($outDir . '/favicon.ico', $ico);
 echo "Gerado: {$outDir}/favicon.ico\n";
 
-// Cópias na raiz do projeto (aaPanel com document root na raiz)
-foreach (['favicon.ico', 'favicon.png', 'apple-touch-icon.png'] as $name) {
+// Espelha na raiz de public/ e do projeto (pedido automático do navegador em /favicon.ico)
+$mirrorNames = ['favicon.ico', 'favicon.png', 'favicon-16x16.png', 'favicon-32x32.png', 'apple-touch-icon.png'];
+foreach ($mirrorNames as $name) {
     $from = $outDir . '/' . $name;
-    $to = $root . '/' . $name;
-    if (!copy($from, $to)) {
-        fwrite(STDERR, "Aviso: não foi possível copiar para {$to}\n");
-    } else {
-        echo "Copiado: {$to}\n";
+    foreach ([$publicDir . '/' . $name, $root . '/' . $name] as $to) {
+        if (copy($from, $to)) {
+            echo "Copiado: {$to}\n";
+        }
     }
 }
 
