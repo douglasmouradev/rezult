@@ -42,8 +42,8 @@ $mesAtual = $meses[(int) date('n')] . ' ' . date('Y');
             <span class="btn-label">Perfil</span>
         </a>
         <?php if (!str_contains($_SERVER['REQUEST_URI'] ?? '', '/lancamentos') && !empty($empresa)): ?>
-        <a href="/lancamentos/criar" class="btn-primary btn-sm">
-            <i class="ph ph-plus"></i> Lançamento
+        <a href="/lancamentos/criar" class="btn-primary btn-sm btn-header-lancamento">
+            <i class="ph ph-plus" aria-hidden="true"></i><span class="btn-header-lancamento__label"> Lançamento</span>
         </a>
         <?php endif; ?>
         <?php if (!empty($empresas)): ?>
