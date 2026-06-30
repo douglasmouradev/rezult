@@ -19,9 +19,32 @@ final class App
         self::$config['app'] = require $basePath . '/config/app.php';
         self::$config['database'] = require $basePath . '/config/database.php';
 
+        self::validateEnvironment();
+
         Session::start(self::config('app.session_lifetime'));
 
         self::securityHeaders();
+    }
+
+    private static function validateEnvironment(): void
+    {
+        if (self::config('env') !== 'production') {
+            return;
+        }
+
+        $key = (string) self::config('app_key', '');
+        if (strlen($key) < 32) {
+            throw new \RuntimeException(
+                'APP_KEY obrigatório em produção (mínimo 32 caracteres). Gere com: openssl rand -hex 32'
+            );
+        }
+
+        $healthToken = trim((string) ($_ENV['HEALTH_TOKEN'] ?? ''));
+        if ($healthToken === '') {
+            throw new \RuntimeException(
+                'HEALTH_TOKEN obrigatório em produção para proteger /health.'
+            );
+        }
     }
 
     public static function pdo(): PDO

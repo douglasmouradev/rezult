@@ -1,29 +1,10 @@
 <?php
+use App\Helpers\NavHelper;
+
 $current = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
-$navMain = [
-    ['/dashboard', 'chart-line', 'Dashboard'],
-    ['/lancamentos', 'receipt', 'Lançamentos'],
-    ['/contas-a-pagar', 'list-checks', 'Contas a pagar'],
-    ['/contas-a-receber', 'trend-up', 'Contas a receber'],
-    ['/cobrancas', 'invoice', 'Cobranças'],
-    ['/conciliacoes', 'bank', 'Conciliação'],
-    ['/contas', 'wallet', 'Contas'],
-];
-$navAvancado = [
-    ['/notas-fiscais', 'currency-circle-dollar', 'NFS-e'],
-    ['/automacoes', 'lightning', 'Automações'],
-    ['/assistente', 'brain', 'Assistente IA'],
-];
-$navConfig = [
-    ['/categorias', 'tag', 'Categorias'],
-    ['/metas', 'target', 'Metas'],
-    ['/orcamentos', 'chart-bar', 'Orçamento'],
-    ['/centros-custo', 'folders', 'Centros de custo'],
-    ['/contatos', 'address-book', 'Contatos'],
-    ['/integracoes', 'plugs-connected', 'Integrações'],
-    ['/empresas', 'buildings', 'Empresas'],
-    ['/plano', 'crown', 'Meu plano'],
-];
+$navMain = NavHelper::navMain();
+$navAvancado = NavHelper::navAvancado();
+$navConfig = NavHelper::navConfig();
 $navRelatorios = [
     ['/relatorios/dre', 'chart-pie', 'DRE'],
     ['/relatorios/fluxo', 'chart-line-up', 'Fluxo de caixa'],
@@ -32,6 +13,26 @@ $navRelatorios = [
 ];
 $isActive = fn (string $path) => str_starts_with($current, $path)
     || ($path === '/relatorios/dre' && str_starts_with($current, '/relatorios'));
+
+$renderNavItems = static function (array $items) use ($current, $navUrl, $isActive, $empresaId): void {
+    foreach ($items as $entry) {
+        [$path, $icon, $label] = $entry;
+        $feature = $entry[3] ?? null;
+        $badge = $entry[4] ?? NavHelper::badgePlano($feature);
+        $locked = $feature !== null && !NavHelper::temFeature((int) $empresaId, $feature);
+        $href = $locked ? '/plano' : $navUrl($path);
+        $classes = 'nav-item' . ($isActive($path) ? ' active' : '') . ($locked ? ' nav-item--locked' : '');
+        ?>
+        <a href="<?= htmlspecialchars($href) ?>" class="<?= $classes ?>"<?= $locked ? ' title="Disponível no plano ' . htmlspecialchars((string) $badge) . '"' : '' ?>>
+            <i class="ph ph-<?= $icon ?>"></i>
+            <span><?= htmlspecialchars($label) ?></span>
+            <?php if ($locked && $badge): ?>
+            <span class="nav-badge"><?= htmlspecialchars($badge) ?></span>
+            <?php endif; ?>
+        </a>
+        <?php
+    }
+};
 ?>
 <div class="sidebar-overlay" aria-hidden="true"></div>
 <aside class="sidebar" id="sidebar">
@@ -55,22 +56,12 @@ $isActive = fn (string $path) => str_starts_with($current, $path)
     <div class="sidebar-menu">
     <p class="sidebar-section">Financeiro</p>
     <nav class="sidebar-nav">
-        <?php foreach ($navMain as [$path, $icon, $label]): ?>
-        <a href="<?= $navUrl($path) ?>" class="nav-item <?= $isActive($path) ? 'active' : '' ?>">
-            <i class="ph ph-<?= $icon ?>"></i>
-            <span><?= $label ?></span>
-        </a>
-        <?php endforeach; ?>
+        <?php $renderNavItems($navMain); ?>
     </nav>
 
     <p class="sidebar-section">Avançado</p>
     <nav class="sidebar-nav">
-        <?php foreach ($navAvancado as [$path, $icon, $label]): ?>
-        <a href="<?= $navUrl($path) ?>" class="nav-item <?= $isActive($path) ? 'active' : '' ?>">
-            <i class="ph ph-<?= $icon ?>"></i>
-            <span><?= $label ?></span>
-        </a>
-        <?php endforeach; ?>
+        <?php $renderNavItems($navAvancado); ?>
     </nav>
 
     <p class="sidebar-section">Conta</p>
@@ -93,29 +84,21 @@ $isActive = fn (string $path) => str_starts_with($current, $path)
     <?php if (!empty($podeGerenciar)): ?>
     <p class="sidebar-section">Administração</p>
     <nav class="sidebar-nav">
-        <a href="<?= $navUrl('/equipe') ?>" class="nav-item <?= str_starts_with($current, '/equipe') ? 'active' : '' ?>">
-            <i class="ph ph-users"></i><span>Equipe</span>
-        </a>
-        <a href="<?= $navUrl('/auditoria') ?>" class="nav-item <?= str_starts_with($current, '/auditoria') ? 'active' : '' ?>">
-            <i class="ph ph-list-checks"></i><span>Auditoria</span>
-        </a>
-        <a href="<?= $navUrl('/api/tokens') ?>" class="nav-item <?= str_starts_with($current, '/api') ? 'active' : '' ?>">
-            <i class="ph ph-code"></i><span>API</span>
-        </a>
-        <a href="<?= $navUrl('/webhooks') ?>" class="nav-item <?= str_starts_with($current, '/webhooks') ? 'active' : '' ?>">
-            <i class="ph ph-webhooks-logo"></i><span>Webhooks</span>
-        </a>
+        <?php
+        $adminItems = [
+            ['/equipe', 'users', 'Equipe', 'equipe', null],
+            ['/auditoria', 'list-checks', 'Auditoria', null, null],
+            ['/api/tokens', 'code', 'API', 'api', 'Pro'],
+            ['/webhooks', 'webhooks-logo', 'Webhooks', 'webhooks', 'Pro'],
+        ];
+        $renderNavItems($adminItems);
+        ?>
     </nav>
     <?php endif; ?>
 
     <p class="sidebar-section">Configuração</p>
     <nav class="sidebar-nav">
-        <?php foreach ($navConfig as [$path, $icon, $label]): ?>
-        <a href="<?= $navUrl($path) ?>" class="nav-item <?= $isActive($path) ? 'active' : '' ?>">
-            <i class="ph ph-<?= $icon ?>"></i>
-            <span><?= $label ?></span>
-        </a>
-        <?php endforeach; ?>
+        <?php $renderNavItems($navConfig); ?>
     </nav>
 
     <p class="sidebar-section">Relatórios</p>
@@ -123,7 +106,7 @@ $isActive = fn (string $path) => str_starts_with($current, $path)
         <?php foreach ($navRelatorios as [$path, $icon, $label]): ?>
         <a href="<?= $navUrl($path) ?>" class="nav-item <?= $isActive($path) ? 'active' : '' ?>">
             <i class="ph ph-<?= $icon ?>"></i>
-            <span><?= $label ?></span>
+            <span><?= htmlspecialchars($label) ?></span>
         </a>
         <?php endforeach; ?>
     </nav>

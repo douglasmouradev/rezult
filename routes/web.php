@@ -181,14 +181,14 @@ $router->get('/contas-a-receber', $wrap([ContaReceberController::class, 'index']
 $router->post('/contas-a-receber/receber-lote', $wrap([ContaReceberController::class, 'receberLote']), [$auth, $empresa, $csrf]);
 
 $router->get('/cobrancas', $wrap([CobrancaController::class, 'index']), [$auth, $empresa, $featCobrancas]);
-$router->get('/cobrancas/criar', $wrap([CobrancaController::class, 'criarForm']), [$auth, $empresa, $featCobrancas]);
+$router->get('/cobrancas/criar', $wrap([CobrancaController::class, 'criarForm']), [$auth, $empresa, $featCobrancas, $rbac]);
 $router->get('/cobrancas/{id}', $wrap([CobrancaController::class, 'ver']), [$auth, $empresa, $featCobrancas]);
-$router->get('/cobrancas/{id}/editar', $wrap([CobrancaController::class, 'editarForm']), [$auth, $empresa, $featCobrancas]);
-$router->post('/cobrancas', $wrap([CobrancaController::class, 'salvar']), [$auth, $empresa, $featCobrancas, $csrf]);
-$router->post('/cobrancas/{id}/emitir', $wrap([CobrancaController::class, 'emitir']), [$auth, $empresa, $featCobrancas, $csrf]);
-$router->post('/cobrancas/{id}/pagar', $wrap([CobrancaController::class, 'marcarPaga']), [$auth, $empresa, $featCobrancas, $csrf]);
-$router->post('/cobrancas/{id}/cancelar', $wrap([CobrancaController::class, 'cancelar']), [$auth, $empresa, $featCobrancas, $csrf]);
-$router->post('/cobrancas/{id}/enviar-email', $wrap([CobrancaController::class, 'enviarEmail']), [$auth, $empresa, $featCobrancas, $csrf]);
+$router->get('/cobrancas/{id}/editar', $wrap([CobrancaController::class, 'editarForm']), [$auth, $empresa, $featCobrancas, $rbac]);
+$router->post('/cobrancas', $wrap([CobrancaController::class, 'salvar']), [$auth, $empresa, $featCobrancas, $rbac, $csrf]);
+$router->post('/cobrancas/{id}/emitir', $wrap([CobrancaController::class, 'emitir']), [$auth, $empresa, $featCobrancas, $rbac, $csrf]);
+$router->post('/cobrancas/{id}/pagar', $wrap([CobrancaController::class, 'marcarPaga']), [$auth, $empresa, $featCobrancas, $rbac, $csrf]);
+$router->post('/cobrancas/{id}/cancelar', $wrap([CobrancaController::class, 'cancelar']), [$auth, $empresa, $featCobrancas, $rbac, $csrf]);
+$router->post('/cobrancas/{id}/enviar-email', $wrap([CobrancaController::class, 'enviarEmail']), [$auth, $empresa, $featCobrancas, $rbac, $csrf]);
 
 $router->get('/notas-fiscais', $wrap([NotaFiscalController::class, 'index']), [$auth, $empresa, $featNfse]);
 $router->get('/notas-fiscais/criar', $wrap([NotaFiscalController::class, 'criarForm']), [$auth, $empresa, $featNfse]);

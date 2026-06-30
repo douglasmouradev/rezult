@@ -10,8 +10,16 @@ final class HealthController
 {
     public function check(): void
     {
-        $token = $_ENV['HEALTH_TOKEN'] ?? '';
-        if ($token !== '') {
+        $token = trim((string) ($_ENV['HEALTH_TOKEN'] ?? ''));
+        $production = App::config('env') === 'production';
+
+        if ($production || $token !== '') {
+            if ($token === '') {
+                http_response_code(503);
+                header('Content-Type: application/json');
+                echo json_encode(['error' => 'Health check not configured']);
+                exit;
+            }
             $provided = $_GET['token'] ?? ($_SERVER['HTTP_X_HEALTH_TOKEN'] ?? '');
             if (!hash_equals($token, (string) $provided)) {
                 http_response_code(403);

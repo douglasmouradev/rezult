@@ -8,6 +8,7 @@ use App\Core\View;
 use App\Helpers\Session;
 use App\Models\Conta;
 use App\Models\Lancamento;
+use App\Policies\TenantPolicy;
 
 final class ContaReceberController
 {
@@ -43,6 +44,7 @@ final class ContaReceberController
 
     public function receberLote(): void
     {
+        TenantPolicy::abortUnlessCanApproveLancamento();
         $eid = (int) Session::get('empresa_id');
         $ids = array_map('intval', $_POST['ids'] ?? []);
         $n = $this->model->marcarPagosEmLote($ids, $eid);

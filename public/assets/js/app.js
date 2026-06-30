@@ -10,7 +10,8 @@ function showToast(message, type = 'success') {
   if (!container) return;
   const el = document.createElement('div');
   el.className = `toast ${type}`;
-  el.innerHTML = `<i class="ph ${TOAST_ICONS[type] || TOAST_ICONS.info}"></i><span>${escapeHtml(message)}</span>`;
+  el.setAttribute('role', type === 'error' ? 'alert' : 'status');
+  el.innerHTML = `<i class="ph ${TOAST_ICONS[type] || TOAST_ICONS.info}" aria-hidden="true"></i><span>${escapeHtml(message)}</span>`;
   container.appendChild(el);
   setTimeout(() => {
     el.style.opacity = '0';

@@ -6,6 +6,7 @@ namespace App\Controllers;
 
 use App\Core\App;
 use App\Core\View;
+use App\Helpers\Crypto;
 use App\Helpers\Sanitize;
 use App\Helpers\Session;
 use App\Helpers\UrlSafety;
@@ -68,13 +69,14 @@ final class WebhookController
             ]);
             Session::flash('success', 'Webhook atualizado.');
         } else {
+            $plainSecret = bin2hex(random_bytes(32));
             App::pdo()->prepare(
                 'INSERT INTO webhooks (empresa_id, url, eventos, secret, ativo) VALUES (:e, :url, :eventos, :secret, 1)'
             )->execute([
                 'e' => $eid,
                 'url' => $url,
                 'eventos' => json_encode($eventos),
-                'secret' => bin2hex(random_bytes(32)),
+                'secret' => Crypto::encrypt($plainSecret),
             ]);
             Session::flash('success', 'Webhook cadastrado.');
         }

@@ -41,14 +41,33 @@ final class Session
             return true;
         }
 
-        $proto = strtolower((string) ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? ''));
-        if ($proto === 'https') {
+        if (self::confiaEmProxy() && strtolower((string) ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '')) === 'https') {
             return true;
         }
 
         $port = (int) ($_SERVER['SERVER_PORT'] ?? 0);
 
         return $port === 443;
+    }
+
+    private static function confiaEmProxy(): bool
+    {
+        $trusted = trim((string) App::config('trusted_proxies', ''));
+        if ($trusted === '') {
+            return false;
+        }
+        if ($trusted === '*') {
+            return true;
+        }
+
+        $ip = (string) ($_SERVER['REMOTE_ADDR'] ?? '');
+        foreach (explode(',', $trusted) as $proxy) {
+            if (trim($proxy) === $ip) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public static function get(string $key, mixed $default = null): mixed

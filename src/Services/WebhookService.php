@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\Core\App;
 use App\Core\Logger;
+use App\Helpers\Crypto;
 
 final class WebhookService
 {
@@ -46,7 +47,7 @@ final class WebhookService
                 $empresaId,
                 $event,
                 $hook['url'],
-                $hook['secret'],
+                self::secretEmClaro((string) $hook['secret']),
                 $body,
             );
         }
@@ -70,7 +71,7 @@ final class WebhookService
 
         $reprocessados = 0;
         foreach ($stmt->fetchAll() as $row) {
-            $resultado = $this->post($row['url'], (string) $row['payload'], (string) $row['secret']);
+            $resultado = $this->post($row['url'], (string) $row['payload'], self::secretEmClaro((string) $row['secret']));
             $this->atualizarEntrega((int) $row['id'], $resultado, (int) $row['tentativas'] + 1);
             if ($resultado['sucesso']) {
                 $reprocessados++;
@@ -192,5 +193,17 @@ final class WebhookService
         }
 
         return $existe;
+    }
+
+    private static function secretEmClaro(string $stored): string
+    {
+        if ($stored === '') {
+            return '';
+        }
+        if (strlen($stored) === 64 && ctype_xdigit($stored)) {
+            return $stored;
+        }
+
+        return Crypto::decrypt($stored);
     }
 }

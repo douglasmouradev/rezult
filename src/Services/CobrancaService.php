@@ -45,9 +45,6 @@ final class CobrancaService
             TenantPolicy::forbidden();
         }
 
-        $pix = $this->gerarCodigoPix($c);
-        $boleto = $c['tipo'] === 'boleto' ? $this->gerarLinhaDigitavel($c) : null;
-
         $gateway = new GatewayService();
         $emitido = $gateway->emitir($empresaId, $c);
 

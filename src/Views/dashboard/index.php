@@ -5,9 +5,15 @@ $d = $dados;
 <?php if (!empty($showOnboarding)): ?>
 <div class="card onboarding-card mb-2">
     <h3>Bem-vindo ao Rezult</h3>
-    <p>1. Cadastre contas · 2. Categorias · 3. Primeiro lançamento · 4. Veja o dashboard</p>
+    <p class="text-muted">Complete estes passos para começar:</p>
+    <ol class="onboarding-steps">
+        <li><a href="<?= $navUrl('/contas/criar') ?>">Cadastre uma conta bancária</a></li>
+        <li><a href="<?= $navUrl('/categorias') ?>">Organize suas categorias</a></li>
+        <li><a href="<?= $navUrl('/lancamentos/criar') ?>">Registre o primeiro lançamento</a></li>
+        <li>Explore o dashboard e relatórios</li>
+    </ol>
     <form method="post" action="/onboarding/concluir"><input type="hidden" name="_csrf" value="<?= $csrf ?>">
-    <button class="btn btn-primary btn-sm">Entendi, começar</button></form>
+    <button class="btn btn-primary btn-sm">Marcar como concluído</button></form>
 </div>
 <?php endif; ?>
 <?php $resultadoHint = $d['resultado_mes'] >= 0 ? '↑ Lucro no período' : '↓ Prejuízo no período'; ?>

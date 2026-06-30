@@ -5,7 +5,7 @@
     <p class="text-muted">Plano atual, limites e upgrade da sua loja</p>
 </div>
 
-<div class="grid-2" style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px">
+<div class="grid-2 plano-grid">
     <div class="card">
         <h3>Plano atual: <strong><?= htmlspecialchars($r['plano_label'] ?? 'Starter') ?></strong></h3>
         <?php if (!empty($r['bloqueio'])): ?>

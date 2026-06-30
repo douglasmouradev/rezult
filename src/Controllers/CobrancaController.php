@@ -62,8 +62,12 @@ final class CobrancaController
 
     public function emitir(int $id): void
     {
-        $this->service->emitir($id, $this->eid(), !empty($_POST['conta_id']) ? (int) $_POST['conta_id'] : null);
-        Session::flash('success', 'Cobrança emitida.');
+        try {
+            $this->service->emitir($id, $this->eid(), !empty($_POST['conta_id']) ? (int) $_POST['conta_id'] : null);
+            Session::flash('success', 'Cobrança emitida.');
+        } catch (\RuntimeException $e) {
+            Session::flash('error', $e->getMessage());
+        }
         View::redirect('/cobrancas/' . $id);
     }
 

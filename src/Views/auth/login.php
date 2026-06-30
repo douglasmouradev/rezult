@@ -14,7 +14,7 @@
         <label for="senha">Senha</label>
         <div class="input-wrap">
             <i class="ph ph-lock"></i>
-            <input class="input" id="senha" type="password" name="senha" required placeholder="••••••••">
+            <input class="input" id="senha" type="password" name="senha" required autocomplete="current-password" placeholder="••••••••">
         </div>
     </div>
     <label class="checkbox-row">

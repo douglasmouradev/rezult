@@ -35,7 +35,7 @@
         </main>
     </div>
 </div>
-<div id="toast-container" class="toast-container"></div>
+<div id="toast-container" class="toast-container" aria-live="polite" aria-atomic="true"></div>
 <?php require __DIR__ . '/../partials/cookie-banner.php'; ?>
 <script src="/assets/js/app.js?v=8"></script>
 <script>

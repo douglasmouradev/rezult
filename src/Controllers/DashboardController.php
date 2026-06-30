@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Core\App;
 use App\Core\View;
 use App\Helpers\Session;
 use App\Services\DashboardService;
@@ -17,7 +18,12 @@ final class DashboardController
     {
         $empresaId = (int) Session::get('empresa_id');
         $dados = $this->service->dados($empresaId);
-        $showOnboarding = !Session::get('onboarding_done') && $empresaId > 0;
+        $showOnboarding = false;
+        if ($empresaId > 0) {
+            $stmt = App::pdo()->prepare('SELECT onboarding_concluido FROM empresas WHERE id = :id LIMIT 1');
+            $stmt->execute(['id' => $empresaId]);
+            $showOnboarding = (int) $stmt->fetchColumn() === 0;
+        }
 
         View::render('dashboard/index', [
             'title' => 'Dashboard',
@@ -28,7 +34,11 @@ final class DashboardController
 
     public function concluirOnboarding(): void
     {
-        Session::set('onboarding_done', true);
+        $empresaId = (int) Session::get('empresa_id');
+        if ($empresaId > 0) {
+            App::pdo()->prepare('UPDATE empresas SET onboarding_concluido = 1 WHERE id = :id')
+                ->execute(['id' => $empresaId]);
+        }
         View::redirect('/dashboard');
     }
 }

@@ -6,6 +6,8 @@ namespace App\Services;
 
 use App\Core\App;
 use App\Core\Logger;
+use App\Helpers\Crypto;
+use App\Helpers\FinancialMode;
 
 /** Emissão de cobranças via gateway configurado ou modo demonstração. */
 final class GatewayService
@@ -20,6 +22,16 @@ final class GatewayService
     {
         if ($this->integracoes->gatewayAtivo($empresaId)) {
             return $this->emitirViaGateway($empresaId, $cobranca);
+        }
+
+        if (!FinancialMode::permiteSimulacao(
+            (string) App::config('financial_mode', 'demo'),
+            (string) App::config('env', 'local'),
+            false,
+        )) {
+            throw new \RuntimeException(
+                'Modo financeiro live exige gateway de pagamento configurado e ativo.'
+            );
         }
 
         return $this->emitirSimulado($cobranca);

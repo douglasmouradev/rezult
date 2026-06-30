@@ -7,7 +7,6 @@ namespace App\Middleware;
 use App\Core\App;
 use App\Helpers\BearerToken;
 use App\Helpers\Session;
-use App\Policies\TenantPolicy;
 use App\Services\PlanService;
 use App\Services\RateLimitService;
 use Closure;
@@ -32,12 +31,17 @@ final class ApiAuthMiddleware
             'SELECT at.*, u.id AS uid FROM api_tokens at
              JOIN usuarios u ON u.id = at.usuario_id
              WHERE at.prefixo = :p
-               AND (at.expira_em IS NULL OR at.expira_em > NOW())
-             LIMIT 1'
+               AND (at.expira_em IS NULL OR at.expira_em > NOW())'
         );
         $stmt->execute(['p' => $prefix]);
-        $row = $stmt->fetch();
-        if (!$row || !password_verify($token, $row['token_hash'])) {
+        $row = null;
+        foreach ($stmt->fetchAll() as $candidate) {
+            if (password_verify($token, $candidate['token_hash'])) {
+                $row = $candidate;
+                break;
+            }
+        }
+        if (!$row) {
             $rate->registrar('api_auth', $ip);
             $this->jsonError(401, 'Unauthorized');
         }

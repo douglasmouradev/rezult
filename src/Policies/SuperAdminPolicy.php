@@ -17,7 +17,21 @@ final class SuperAdminPolicy
             return false;
         }
 
-        if (isset($_SESSION['is_superadmin'])) {
+        return self::carregarFlagSuperadmin($uid, false);
+    }
+
+    public static function abortUnlessSuperadmin(): void
+    {
+        $uid = (int) Session::get('usuario_id');
+        if ($uid <= 0 || !self::carregarFlagSuperadmin($uid, true)) {
+            Session::flash('error', 'Acesso restrito a superadministradores.');
+            View::redirect('/dashboard');
+        }
+    }
+
+    private static function carregarFlagSuperadmin(int $uid, bool $fresh): bool
+    {
+        if (!$fresh && isset($_SESSION['is_superadmin'])) {
             return (bool) $_SESSION['is_superadmin'];
         }
 
@@ -31,13 +45,5 @@ final class SuperAdminPolicy
         Session::set('is_superadmin', $flag);
 
         return $flag;
-    }
-
-    public static function abortUnlessSuperadmin(): void
-    {
-        if (!self::isSuperadmin()) {
-            Session::flash('error', 'Acesso restrito a superadministradores.');
-            View::redirect('/dashboard');
-        }
     }
 }

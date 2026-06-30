@@ -20,4 +20,6 @@ return [
     'lgpd_dpo_email' => $_ENV['LGPD_DPO_EMAIL'] ?? 'privacidade@rezult.app',
     'superadmin_email' => $_ENV['SUPERADMIN_EMAIL'] ?? '',
     'app_key' => $_ENV['APP_KEY'] ?? '',
+    'financial_mode' => $_ENV['FINANCIAL_MODE'] ?? 'demo',
+    'trusted_proxies' => $_ENV['TRUSTED_PROXIES'] ?? '',
 ];
