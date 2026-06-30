@@ -164,7 +164,7 @@ HTML;
             "<p>Olá <strong>{$n}</strong>,</p>
             <p>O plano <strong>{$p}</strong> da empresa <strong>{$e}</strong> expira em <strong>{$dias} dia(s)</strong> ({$d}).</p>
             <p>Renove para continuar usando todos os recursos sem interrupção.</p>"
-            . self::botao(App::config('url') . '/configuracoes', 'Gerenciar plano')
+            . self::botao(App::config('url') . '/plano', 'Gerenciar plano')
         );
 
         return [

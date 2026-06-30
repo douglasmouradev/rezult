@@ -19,4 +19,5 @@ return [
     'mail_encryption' => $_ENV['MAIL_ENCRYPTION'] ?? 'tls',
     'lgpd_dpo_email' => $_ENV['LGPD_DPO_EMAIL'] ?? 'privacidade@rezult.app',
     'superadmin_email' => $_ENV['SUPERADMIN_EMAIL'] ?? '',
+    'app_key' => $_ENV['APP_KEY'] ?? '',
 ];

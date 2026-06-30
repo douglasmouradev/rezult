@@ -37,7 +37,12 @@
 </div>
 <div id="toast-container" class="toast-container"></div>
 <?php require __DIR__ . '/../partials/cookie-banner.php'; ?>
-<script src="/assets/js/app.js?v=7"></script>
+<script src="/assets/js/app.js?v=8"></script>
+<script>
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js').catch(function () {});
+}
+</script>
 <?php if (!empty($pageScripts)): ?><?= $pageScripts ?><?php endif; ?>
 </body>
 </html>

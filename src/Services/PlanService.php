@@ -8,16 +8,76 @@ use App\Core\App;
 
 final class PlanService
 {
-    private const LIMITES = [
-        'starter' => ['empresas' => 1, 'usuarios' => 1],
-        'pro' => ['empresas' => 5, 'usuarios' => 10],
-        'business' => ['empresas' => null, 'usuarios' => null],
+  private const LIMITES = [
+        'starter' => ['empresas' => 1, 'usuarios' => 1, 'api_tokens' => 0, 'webhooks' => 0],
+        'pro' => ['empresas' => 5, 'usuarios' => 10, 'api_tokens' => 3, 'webhooks' => 5],
+        'business' => ['empresas' => null, 'usuarios' => null, 'api_tokens' => null, 'webhooks' => null],
     ];
 
-    /** @return array<string, array{empresas: ?int, usuarios: ?int}> */
+    /** @var array<string, list<string>> */
+    private const FEATURES = [
+        'starter' => ['financeiro', 'relatorios', 'equipe', 'orcamento'],
+        'pro' => ['financeiro', 'relatorios', 'equipe', 'orcamento', 'api', 'webhooks', 'automacoes', 'integracoes', 'cobrancas', 'conciliacao'],
+        'business' => ['financeiro', 'relatorios', 'equipe', 'orcamento', 'api', 'webhooks', 'automacoes', 'integracoes', 'cobrancas', 'conciliacao', 'nfse', 'open_finance', 'assistente_ia'],
+    ];
+
+    /** @return array<string, array{empresas: ?int, usuarios: ?int, api_tokens: ?int, webhooks: ?int}> */
     public function limites(): array
     {
         return self::LIMITES;
+    }
+
+    /** @return list<string> */
+    public function featuresPlano(string $plano): array
+    {
+        return self::FEATURES[$plano] ?? self::FEATURES['starter'];
+    }
+
+    public function temFeature(int $empresaId, string $feature): bool
+    {
+        return in_array($feature, $this->featuresPlano($this->planoEmpresa($empresaId)), true);
+    }
+
+    /** @return array<string, array{nome: string, preco: string, features: list<string>}> */
+    public function catalogoPlanos(): array
+    {
+        return [
+            'starter' => [
+                'nome' => 'Starter',
+                'preco' => 'Grátis',
+                'features' => self::FEATURES['starter'],
+            ],
+            'pro' => [
+                'nome' => 'Pro',
+                'preco' => 'Sob consulta',
+                'features' => self::FEATURES['pro'],
+            ],
+            'business' => [
+                'nome' => 'Business',
+                'preco' => 'Sob consulta',
+                'features' => self::FEATURES['business'],
+            ],
+        ];
+    }
+
+    public function labelFeature(string $feature): string
+    {
+        return match ($feature) {
+            'financeiro' => 'Financeiro completo',
+            'relatorios' => 'Relatórios Excel/PDF',
+            'equipe' => 'Equipe e convites',
+            'orcamento' => 'Orçamento',
+            'api' => 'API REST',
+            'webhooks' => 'Webhooks',
+            'automacoes' => 'Automações',
+            'integracoes' => 'Integrações',
+            'cobrancas' => 'Cobranças Pix/Boleto',
+            'conciliacao' => 'Conciliação bancária',
+            'nfse' => 'NFS-e',
+            'open_finance' => 'Open Finance',
+            'assistente_ia' => 'Assistente IA',
+            default => ucfirst($feature),
+        };
     }
 
     public function planoEmpresa(int $empresaId): string
@@ -61,6 +121,38 @@ final class PlanService
         $pendentes = (int) $stmt->fetchColumn();
 
         return ($membros + $pendentes) < $limite;
+    }
+
+    public function podeCriarTokenApi(int $empresaId): bool
+    {
+        $limite = self::LIMITES[$this->planoEmpresa($empresaId)]['api_tokens'];
+        if ($limite === null) {
+            return true;
+        }
+        if ($limite === 0) {
+            return false;
+        }
+
+        $stmt = App::pdo()->prepare('SELECT COUNT(*) FROM api_tokens WHERE empresa_id = :e');
+        $stmt->execute(['e' => $empresaId]);
+
+        return (int) $stmt->fetchColumn() < $limite;
+    }
+
+    public function podeCriarWebhook(int $empresaId): bool
+    {
+        $limite = self::LIMITES[$this->planoEmpresa($empresaId)]['webhooks'];
+        if ($limite === null) {
+            return true;
+        }
+        if ($limite === 0) {
+            return false;
+        }
+
+        $stmt = App::pdo()->prepare('SELECT COUNT(*) FROM webhooks WHERE empresa_id = :e');
+        $stmt->execute(['e' => $empresaId]);
+
+        return (int) $stmt->fetchColumn() < $limite;
     }
 
     private function planoUsuario(int $userId): string

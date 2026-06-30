@@ -8,7 +8,9 @@ use App\Core\App;
 use App\Core\View;
 use App\Helpers\Sanitize;
 use App\Helpers\Session;
+use App\Helpers\UrlSafety;
 use App\Policies\TenantPolicy;
+use App\Services\PlanService;
 use App\Services\WebhookService;
 
 final class WebhookController
@@ -39,6 +41,17 @@ final class WebhookController
 
         if ($url === '' || $eventos === []) {
             Session::flash('error', 'Informe URL e ao menos um evento.');
+            View::redirect('/webhooks');
+        }
+
+        $check = UrlSafety::webhookPermitida($url);
+        if (!$check['ok']) {
+            Session::flash('error', 'URL do webhook inválida: ' . ($check['motivo'] ?? ''));
+            View::redirect('/webhooks');
+        }
+
+        if ($id <= 0 && !(new PlanService())->podeCriarWebhook($eid)) {
+            Session::flash('error', 'Limite de webhooks do seu plano atingido.');
             View::redirect('/webhooks');
         }
 

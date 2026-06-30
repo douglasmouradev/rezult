@@ -24,7 +24,7 @@ jobs:
       - uses: shivammathur/setup-php@v2
         with:
           php-version: '8.3'
-          extensions: pdo_mysql
+          extensions: pdo_mysql, openssl
       - run: composer install --no-interaction
       - run: cp .env.example .env
       - run: |
@@ -32,6 +32,9 @@ jobs:
           sed -i 's/DB_DATABASE=.*/DB_DATABASE=rezult_test/' .env
           sed -i 's/DB_USERNAME=.*/DB_USERNAME=root/' .env
           sed -i 's/DB_PASSWORD=.*/DB_PASSWORD=root/' .env
+          echo 'APP_KEY=test-ci-key-32chars-minimum!!' >> .env
       - run: php bin/migrate.php
-      - run: composer audit || true
+      - run: composer audit --format=plain || exit 1
+      - run: |
+          if [ -f vendor/bin/phpstan ]; then vendor/bin/phpstan analyse -c phpstan.neon --no-progress; fi
       - run: composer test

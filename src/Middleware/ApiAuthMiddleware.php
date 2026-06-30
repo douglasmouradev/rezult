@@ -7,6 +7,8 @@ namespace App\Middleware;
 use App\Core\App;
 use App\Helpers\BearerToken;
 use App\Helpers\Session;
+use App\Policies\TenantPolicy;
+use App\Services\PlanService;
 use App\Services\RateLimitService;
 use Closure;
 
@@ -40,8 +42,26 @@ final class ApiAuthMiddleware
             $this->jsonError(401, 'Unauthorized');
         }
 
+        $empresaId = (int) $row['empresa_id'];
+        $plan = new PlanService();
+        if (!$plan->temFeature($empresaId, 'api')) {
+            $this->jsonError(403, 'API not available on current plan');
+        }
+
+        if ($rate->excedido('api_use_' . $row['id'], (string) $row['id'], 1000, 60)) {
+            $this->jsonError(429, 'API rate limit exceeded');
+        }
+        $rate->registrar('api_use_' . $row['id'], (string) $row['id']);
+
+        $escopos = $row['escopos'] ?? 'read_write';
+        if ($_SERVER['REQUEST_METHOD'] !== 'GET' && $escopos === 'read') {
+            $this->jsonError(403, 'Token is read-only');
+        }
+
         Session::set('usuario_id', (int) $row['uid']);
-        Session::set('empresa_id', (int) $row['empresa_id']);
+        Session::set('empresa_id', $empresaId);
+        Session::set('api_token_id', (int) $row['id']);
+        Session::set('api_token_escopos', $escopos);
         App::pdo()->prepare('UPDATE api_tokens SET ultimo_uso = NOW() WHERE id = :id')->execute(['id' => $row['id']]);
         $next();
     }

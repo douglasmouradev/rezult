@@ -6,6 +6,7 @@ Sistema multi-tenant em **PHP 8.3 + MySQL 8**, MVC manual, LGPD e RBAC completo.
 
 ```bash
 cp .env.example .env
+# Gere APP_KEY: php -r "echo bin2hex(random_bytes(32));"
 composer install
 php bin/migrate.php
 php bin/seed.php
@@ -20,89 +21,75 @@ php -S localhost:8000 -t public
 bash bin/deploy.sh
 ```
 
-O script faz backup de arquivos locais conflitantes (`.htaccess`, `index.html`), `git pull`, `composer install`, migrations e ajusta permissões de `storage/`.
+Configure no `.env` de produção:
 
-**Após o primeiro deploy:**
-
-```bash
-php bin/create-superadmin.php "Seu Nome" email@exemplo.com "SenhaForte123"
+```env
+APP_ENV=production
+APP_DEBUG=false
+APP_URL=https://seu-dominio.com
+APP_KEY=sua-chave-secreta-64-chars-hex
 ```
 
-## Funcionalidades
+## Planos e features
 
-| Módulo | Descrição |
-|--------|-----------|
-| Financeiro | Lançamentos, contas, transferências, extrato, import CSV/OFX |
-| Relatórios | DRE, fluxo, categoria (Excel/PDF) |
-| Contatos | Clientes e fornecedores |
-| Orçamento | Planejado vs realizado por categoria/mês |
-| Cobranças | Pix/boleto com envio por e-mail HTML |
-| Equipe | Membros, convites, remoção |
-| API REST | `GET/POST /api/v1/lancamentos` com Bearer token e rate limit |
-| Webhooks | Eventos HTTP com HMAC, log de entregas e retry automático |
-| Integrações | Open Finance, gateway e NFS-e (stubs configuráveis) |
-| Planos | Starter / Pro / Business com limites e expiração |
-| Superadmin | Usuários, lojas, logins, logs do sistema, migrations |
-| LGPD | Consentimento, export, retificação, exclusão agendada |
-| PWA | Manifest para instalação no celular |
+| Plano | Empresas | Usuários | API | Webhooks | Integrações | NFS-e / OF / IA |
+|-------|----------|----------|-----|----------|-------------|-----------------|
+| Starter | 1 | 1 | — | — | — | — |
+| Pro | 5 | 10 | ✓ | ✓ | ✓ | — |
+| Business | ∞ | ∞ | ✓ | ✓ | ✓ | ✓ |
+
+Gestão de plano: `/plano` · Superadmin: `/superadmin/empresas`
+
+## Segurança
+
+- Segredos de integração **criptografados** (`APP_KEY` + `Crypto`)
+- Webhooks com proteção **SSRF** e HTTPS em produção
+- API com **escopos** (leitura / leitura+escrita) e rate limit
+- `storage/` bloqueado via `.htaccess`
+- CSRF + header `X-CSRF-Token`
+
+## Integrações (modo demonstração)
+
+Open Finance, gateway e NFS-e salvam configuração; chamadas reais aos provedores são extensão futura. Cobranças usam gateway se configurado; senão **Pix/boleto simulados** (não use em produção financeira sem gateway).
 
 ## E-mail (SMTP)
 
-Configure no `.env` para envio em produção:
+Ver variáveis `MAIL_*` no `.env.example`.
 
-```env
-MAIL_FROM=noreply@seudominio.com
-MAIL_FROM_NAME=Rezult
-MAIL_HOST=smtp.seudominio.com
-MAIL_PORT=587
-MAIL_USER=usuario
-MAIL_PASSWORD=senha
-MAIL_ENCRYPTION=tls
-```
-
-Sem SMTP, e-mails são gravados em `storage/mail/` (desenvolvimento).
-
-Templates HTML: confirmação de conta, recuperação de senha, convites, vencimentos, resumo semanal, cobranças e aviso de plano expirando.
-
-## Cron (agendar no servidor)
+## Cron
 
 ```bash
-*/15 * * * * php /caminho/bin/cron-recorrente.php   # lançamentos recorrentes
-0 8 * * *     php /caminho/bin/cron-emails.php       # vencimentos + resumo semanal
-0 9 * * *     php /caminho/bin/cron-planos.php       # aviso plano expirando (7d e 1d)
-*/30 * * * *  php /caminho/bin/cron-webhooks.php     # retry webhooks com falha
-0 3 * * *     php /caminho/bin/cron-lgpd.php         # exclusões após 15 dias
+*/15 * * * * php bin/cron-recorrente.php
+0 8 * * *     php bin/cron-emails.php
+0 9 * * *     php bin/cron-planos.php      # avisos + desativa expirados
+*/30 * * * *  php bin/cron-webhooks.php
+0 3 * * *     php bin/cron-lgpd.php
 ```
 
 ## API
 
-1. Admin gera token em `/api/tokens`
-2. Requisições: `Authorization: Bearer SEU_TOKEN`
+Documentação OpenAPI: `docs/api.openapi.yaml`
 
-```bash
-curl -H "Authorization: Bearer TOKEN" https://rezult.tdesksolutions.com.br/api/v1/lancamentos
-```
+Tokens em `/api/tokens` (planos Pro+). Header: `Authorization: Bearer TOKEN`
 
-## Superadmin
-
-Rotas: `/superadmin`, `/superadmin/usuarios`, `/superadmin/empresas`, `/superadmin/logins`, `/superadmin/sistema`
-
-Promover via CLI: `php bin/promote-superadmin.php email@exemplo.com`
-
-## Docker
-
-```bash
-docker compose up -d
-```
-
-## Testes
+## Testes e qualidade
 
 ```bash
 composer test
+vendor/bin/phpstan analyse -c phpstan.neon
+composer audit
 ```
 
-## Produção
+CI roda migrations, audit, PHPStan e PHPUnit no GitHub Actions.
 
-- `APP_ENV=production`, `APP_DEBUG=false`
-- Nginx: ver `docker/nginx.conf`
-- `LGPD_DPO_EMAIL`, `MAIL_*` e opcionalmente `HEALTH_TOKEN`, `SUPERADMIN_EMAIL` no `.env`
+## PWA
+
+`manifest.json` + `public/sw.js` (cache de assets estáticos).
+
+## Superadmin
+
+`/superadmin`, `/superadmin/usuarios`, `/superadmin/empresas`, `/superadmin/sistema`
+
+```bash
+php bin/create-superadmin.php "Nome" email@exemplo.com "SenhaForte123"
+```

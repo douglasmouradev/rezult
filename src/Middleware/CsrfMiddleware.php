@@ -13,7 +13,9 @@ final class CsrfMiddleware
     public function __invoke(callable $next): void
     {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $token = $_POST['_csrf'] ?? '';
+            $token = $_POST['_csrf']
+                ?? $_SERVER['HTTP_X_CSRF_TOKEN']
+                ?? '';
             if (!Csrf::validate($token)) {
                 Session::flash('error', 'Token de segurança inválido. Tente novamente.');
                 View::redirect(self::safeRedirectPath());

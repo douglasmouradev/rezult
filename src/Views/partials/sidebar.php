@@ -22,6 +22,7 @@ $navConfig = [
     ['/contatos', 'address-book', 'Contatos'],
     ['/integracoes', 'plugs-connected', 'Integrações'],
     ['/empresas', 'buildings', 'Empresas'],
+    ['/plano', 'crown', 'Meu plano'],
 ];
 $navRelatorios = [
     ['/relatorios/dre', 'chart-pie', 'DRE'],

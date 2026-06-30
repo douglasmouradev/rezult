@@ -35,6 +35,12 @@ final class WebhookService
                 continue;
             }
 
+            $check = \App\Helpers\UrlSafety::webhookPermitida($hook['url']);
+            if (!$check['ok']) {
+                Logger::info('Webhook URL bloqueada', ['url' => $hook['url'], 'motivo' => $check['motivo']]);
+                continue;
+            }
+
             $this->entregar(
                 (int) $hook['id'],
                 $empresaId,

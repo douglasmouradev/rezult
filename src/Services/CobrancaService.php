@@ -48,11 +48,14 @@ final class CobrancaService
         $pix = $this->gerarCodigoPix($c);
         $boleto = $c['tipo'] === 'boleto' ? $this->gerarLinhaDigitavel($c) : null;
 
+        $gateway = new GatewayService();
+        $emitido = $gateway->emitir($empresaId, $c);
+
         $this->model->save([
             'id' => $id,
             'status' => 'emitida',
-            'codigo_pix' => $pix,
-            'linha_digitavel' => $boleto,
+            'codigo_pix' => $emitido['codigo_pix'],
+            'linha_digitavel' => $emitido['linha_digitavel'],
         ], $empresaId);
 
         if (empty($c['lancamento_id'])) {
@@ -131,6 +134,11 @@ final class CobrancaService
         if ($atualizada) {
             (new WebhookService())->dispatch('cobranca.paga', $empresaId, $atualizada);
         }
+    }
+
+    public function modoCobranca(int $empresaId): string
+    {
+        return (new GatewayService())->modoAtual($empresaId);
     }
 
     private function gerarCodigoPix(array $c): string

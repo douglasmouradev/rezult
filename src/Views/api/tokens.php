@@ -5,15 +5,26 @@
 <form method="post" action="/api/tokens" class="card mb-2">
     <input type="hidden" name="_csrf" value="<?= $csrf ?>">
     <input class="input" name="nome" placeholder="Nome do token" required>
+    <div class="form-group mt-2">
+        <label>Escopo</label>
+        <select name="escopos" class="input">
+            <option value="read_write">Leitura e escrita</option>
+            <option value="read">Somente leitura</option>
+        </select>
+    </div>
+    <?php if (isset($limite)): ?>
+    <p class="text-muted" style="font-size:0.85rem">Limite do plano: <?= $limite === null ? 'ilimitado' : (int) $limite ?> token(s)</p>
+    <?php endif; ?>
     <button class="btn btn-primary mt-2">Gerar token</button>
 </form>
 <div class="card">
 <table class="data-table">
-<thead><tr><th>Nome</th><th>Prefixo</th><th>Último uso</th><th>Criado</th><th></th></tr></thead>
+<thead><tr><th>Nome</th><th>Prefixo</th><th>Escopo</th><th>Último uso</th><th>Criado</th><th></th></tr></thead>
 <tbody><?php foreach ($tokens as $t): ?>
 <tr>
     <td><?= htmlspecialchars($t['nome']) ?></td>
     <td><code><?= htmlspecialchars($t['prefixo']) ?>...</code></td>
+    <td><?= ($t['escopos'] ?? 'read_write') === 'read' ? 'Leitura' : 'Leitura/escrita' ?></td>
     <td><?= $t['ultimo_uso'] ? date('d/m/Y H:i', strtotime($t['ultimo_uso'])) : '—' ?></td>
     <td><?= date('d/m/Y', strtotime($t['criado_em'])) ?></td>
     <td>

@@ -19,9 +19,9 @@ final class IntegracaoController
         $eid = TenantPolicy::empresaId();
         View::render('integracoes/index', [
             'title' => 'Integrações',
-            'openFinance' => $this->service->getConfig($eid, IntegracaoService::PROVEDOR_OPEN_FINANCE),
-            'gateway' => $this->service->getConfig($eid, IntegracaoService::PROVEDOR_GATEWAY),
-            'nfse' => $this->service->getConfig($eid, IntegracaoService::PROVEDOR_NFSE),
+            'openFinance' => $this->service->getConfigForDisplay($eid, IntegracaoService::PROVEDOR_OPEN_FINANCE),
+            'gateway' => $this->service->getConfigForDisplay($eid, IntegracaoService::PROVEDOR_GATEWAY),
+            'nfse' => $this->service->getConfigForDisplay($eid, IntegracaoService::PROVEDOR_NFSE),
         ]);
     }
 

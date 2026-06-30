@@ -39,7 +39,8 @@ use App\Middleware\EmpresaMiddleware;
 use App\Middleware\GuestMiddleware;
 use App\Middleware\PlanMiddleware;
 use App\Middleware\RbacMiddleware;
-use App\Middleware\SuperAdminMiddleware;
+use App\Controllers\PlanoController;
+use App\Middleware\PlanFeatureMiddleware;
 
 /** @var Router $router */
 $wrap = fn (array $h): callable => fn (...$p) => (new $h[0]())->{$h[1]}(...$p);
@@ -52,6 +53,14 @@ $rbac = new RbacMiddleware('config');
 $planEmpresa = new PlanMiddleware('empresa');
 $planConvite = new PlanMiddleware('convite');
 $superadmin = new SuperAdminMiddleware();
+$featApi = new PlanFeatureMiddleware('api');
+$featWebhooks = new PlanFeatureMiddleware('webhooks');
+$featAutomacoes = new PlanFeatureMiddleware('automacoes');
+$featIntegracoes = new PlanFeatureMiddleware('integracoes');
+$featCobrancas = new PlanFeatureMiddleware('cobrancas');
+$featNfse = new PlanFeatureMiddleware('nfse');
+$featAssistente = new PlanFeatureMiddleware('assistente_ia');
+$featConciliacao = new PlanFeatureMiddleware('conciliacao');
 
 $router->get('/health', $wrap([HealthController::class, 'check']));
 
@@ -107,18 +116,21 @@ $router->get('/superadmin/sistema', $wrap([SuperAdminController::class, 'sistema
 $router->post('/superadmin/promover', $wrap([SuperAdminController::class, 'promover']), [$auth, $superadmin, $csrf]);
 $router->post('/superadmin/revogar', $wrap([SuperAdminController::class, 'revogar']), [$auth, $superadmin, $csrf]);
 
+$router->get('/plano', $wrap([PlanoController::class, 'index']), [$auth, $empresa]);
+$router->post('/plano/upgrade', $wrap([PlanoController::class, 'upgrade']), [$auth, $empresa, $rbac, $csrf]);
+
 $router->get('/notificacoes', $wrap([NotificacaoController::class, 'index']), [$auth]);
 $router->post('/notificacoes/{id}/lida', $wrap([NotificacaoController::class, 'marcarLida']), [$auth, $csrf]);
 $router->post('/notificacoes/lidas', $wrap([NotificacaoController::class, 'marcarTodas']), [$auth, $csrf]);
 
-$router->get('/webhooks', $wrap([WebhookController::class, 'index']), [$auth, $empresa, $rbac]);
-$router->get('/webhooks/entregas', $wrap([WebhookController::class, 'entregas']), [$auth, $empresa, $rbac]);
-$router->post('/webhooks', $wrap([WebhookController::class, 'salvar']), [$auth, $empresa, $rbac, $csrf]);
-$router->post('/webhooks/{id}/excluir', $wrap([WebhookController::class, 'excluir']), [$auth, $empresa, $rbac, $csrf]);
+$router->get('/webhooks', $wrap([WebhookController::class, 'index']), [$auth, $empresa, $rbac, $featWebhooks]);
+$router->get('/webhooks/entregas', $wrap([WebhookController::class, 'entregas']), [$auth, $empresa, $rbac, $featWebhooks]);
+$router->post('/webhooks', $wrap([WebhookController::class, 'salvar']), [$auth, $empresa, $rbac, $featWebhooks, $csrf]);
+$router->post('/webhooks/{id}/excluir', $wrap([WebhookController::class, 'excluir']), [$auth, $empresa, $rbac, $featWebhooks, $csrf]);
 
-$router->get('/api/tokens', $wrap([ApiTokenController::class, 'index']), [$auth, $empresa, $rbac]);
-$router->post('/api/tokens', $wrap([ApiTokenController::class, 'criar']), [$auth, $empresa, $rbac, $csrf]);
-$router->post('/api/tokens/{id}/revogar', $wrap([ApiTokenController::class, 'revogar']), [$auth, $empresa, $rbac, $csrf]);
+$router->get('/api/tokens', $wrap([ApiTokenController::class, 'index']), [$auth, $empresa, $rbac, $featApi]);
+$router->post('/api/tokens', $wrap([ApiTokenController::class, 'criar']), [$auth, $empresa, $rbac, $featApi, $csrf]);
+$router->post('/api/tokens/{id}/revogar', $wrap([ApiTokenController::class, 'revogar']), [$auth, $empresa, $rbac, $featApi, $csrf]);
 
 $router->get('/orcamentos', $wrap([OrcamentoController::class, 'index']), [$auth, $empresa]);
 $router->post('/orcamentos', $wrap([OrcamentoController::class, 'salvar']), [$auth, $empresa, $rbac, $csrf]);
@@ -132,8 +144,8 @@ $router->get('/contatos', $wrap([ContatoController::class, 'index']), [$auth, $e
 $router->post('/contatos', $wrap([ContatoController::class, 'salvar']), [$auth, $empresa, $rbac, $csrf]);
 $router->post('/contatos/{id}/excluir', $wrap([ContatoController::class, 'excluir']), [$auth, $empresa, $rbac, $csrf]);
 
-$router->get('/integracoes', $wrap([IntegracaoController::class, 'index']), [$auth, $empresa, $rbac]);
-$router->post('/integracoes', $wrap([IntegracaoController::class, 'salvar']), [$auth, $empresa, $rbac, $csrf]);
+$router->get('/integracoes', $wrap([IntegracaoController::class, 'index']), [$auth, $empresa, $rbac, $featIntegracoes]);
+$router->post('/integracoes', $wrap([IntegracaoController::class, 'salvar']), [$auth, $empresa, $rbac, $featIntegracoes, $csrf]);
 
 $router->get('/empresas', $wrap([EmpresaController::class, 'index']), [$auth]);
 $router->get('/empresas/criar', $wrap([EmpresaController::class, 'criarForm']), [$auth]);
@@ -168,37 +180,37 @@ $router->post('/contas-a-pagar/pagar-lote', $wrap([ContaPagarController::class, 
 $router->get('/contas-a-receber', $wrap([ContaReceberController::class, 'index']), [$auth, $empresa]);
 $router->post('/contas-a-receber/receber-lote', $wrap([ContaReceberController::class, 'receberLote']), [$auth, $empresa, $csrf]);
 
-$router->get('/cobrancas', $wrap([CobrancaController::class, 'index']), [$auth, $empresa]);
-$router->get('/cobrancas/criar', $wrap([CobrancaController::class, 'criarForm']), [$auth, $empresa]);
-$router->get('/cobrancas/{id}', $wrap([CobrancaController::class, 'ver']), [$auth, $empresa]);
-$router->get('/cobrancas/{id}/editar', $wrap([CobrancaController::class, 'editarForm']), [$auth, $empresa]);
-$router->post('/cobrancas', $wrap([CobrancaController::class, 'salvar']), [$auth, $empresa, $csrf]);
-$router->post('/cobrancas/{id}/emitir', $wrap([CobrancaController::class, 'emitir']), [$auth, $empresa, $csrf]);
-$router->post('/cobrancas/{id}/pagar', $wrap([CobrancaController::class, 'marcarPaga']), [$auth, $empresa, $csrf]);
-$router->post('/cobrancas/{id}/cancelar', $wrap([CobrancaController::class, 'cancelar']), [$auth, $empresa, $csrf]);
-$router->post('/cobrancas/{id}/enviar-email', $wrap([CobrancaController::class, 'enviarEmail']), [$auth, $empresa, $csrf]);
+$router->get('/cobrancas', $wrap([CobrancaController::class, 'index']), [$auth, $empresa, $featCobrancas]);
+$router->get('/cobrancas/criar', $wrap([CobrancaController::class, 'criarForm']), [$auth, $empresa, $featCobrancas]);
+$router->get('/cobrancas/{id}', $wrap([CobrancaController::class, 'ver']), [$auth, $empresa, $featCobrancas]);
+$router->get('/cobrancas/{id}/editar', $wrap([CobrancaController::class, 'editarForm']), [$auth, $empresa, $featCobrancas]);
+$router->post('/cobrancas', $wrap([CobrancaController::class, 'salvar']), [$auth, $empresa, $featCobrancas, $csrf]);
+$router->post('/cobrancas/{id}/emitir', $wrap([CobrancaController::class, 'emitir']), [$auth, $empresa, $featCobrancas, $csrf]);
+$router->post('/cobrancas/{id}/pagar', $wrap([CobrancaController::class, 'marcarPaga']), [$auth, $empresa, $featCobrancas, $csrf]);
+$router->post('/cobrancas/{id}/cancelar', $wrap([CobrancaController::class, 'cancelar']), [$auth, $empresa, $featCobrancas, $csrf]);
+$router->post('/cobrancas/{id}/enviar-email', $wrap([CobrancaController::class, 'enviarEmail']), [$auth, $empresa, $featCobrancas, $csrf]);
 
-$router->get('/notas-fiscais', $wrap([NotaFiscalController::class, 'index']), [$auth, $empresa]);
-$router->get('/notas-fiscais/criar', $wrap([NotaFiscalController::class, 'criarForm']), [$auth, $empresa]);
-$router->get('/notas-fiscais/{id}', $wrap([NotaFiscalController::class, 'ver']), [$auth, $empresa]);
-$router->get('/notas-fiscais/{id}/editar', $wrap([NotaFiscalController::class, 'editarForm']), [$auth, $empresa]);
-$router->post('/notas-fiscais', $wrap([NotaFiscalController::class, 'salvar']), [$auth, $empresa, $csrf]);
-$router->post('/notas-fiscais/{id}/emitir', $wrap([NotaFiscalController::class, 'emitir']), [$auth, $empresa, $csrf]);
+$router->get('/notas-fiscais', $wrap([NotaFiscalController::class, 'index']), [$auth, $empresa, $featNfse]);
+$router->get('/notas-fiscais/criar', $wrap([NotaFiscalController::class, 'criarForm']), [$auth, $empresa, $featNfse]);
+$router->get('/notas-fiscais/{id}', $wrap([NotaFiscalController::class, 'ver']), [$auth, $empresa, $featNfse]);
+$router->get('/notas-fiscais/{id}/editar', $wrap([NotaFiscalController::class, 'editarForm']), [$auth, $empresa, $featNfse]);
+$router->post('/notas-fiscais', $wrap([NotaFiscalController::class, 'salvar']), [$auth, $empresa, $featNfse, $csrf]);
+$router->post('/notas-fiscais/{id}/emitir', $wrap([NotaFiscalController::class, 'emitir']), [$auth, $empresa, $featNfse, $csrf]);
 
-$router->get('/automacoes', $wrap([AutomacaoController::class, 'index']), [$auth, $empresa, $rbac]);
-$router->post('/automacoes', $wrap([AutomacaoController::class, 'salvar']), [$auth, $empresa, $rbac, $csrf]);
-$router->post('/automacoes/{id}/toggle', $wrap([AutomacaoController::class, 'toggle']), [$auth, $empresa, $rbac, $csrf]);
-$router->post('/automacoes/{id}/excluir', $wrap([AutomacaoController::class, 'excluir']), [$auth, $empresa, $rbac, $csrf]);
+$router->get('/automacoes', $wrap([AutomacaoController::class, 'index']), [$auth, $empresa, $rbac, $featAutomacoes]);
+$router->post('/automacoes', $wrap([AutomacaoController::class, 'salvar']), [$auth, $empresa, $rbac, $featAutomacoes, $csrf]);
+$router->post('/automacoes/{id}/toggle', $wrap([AutomacaoController::class, 'toggle']), [$auth, $empresa, $rbac, $featAutomacoes, $csrf]);
+$router->post('/automacoes/{id}/excluir', $wrap([AutomacaoController::class, 'excluir']), [$auth, $empresa, $rbac, $featAutomacoes, $csrf]);
 
-$router->get('/conciliacoes', $wrap([ConciliacaoController::class, 'index']), [$auth, $empresa]);
-$router->post('/conciliacoes/importar', $wrap([ConciliacaoController::class, 'importar']), [$auth, $empresa, $csrf]);
-$router->get('/conciliacoes/{id}', $wrap([ConciliacaoController::class, 'ver']), [$auth, $empresa]);
-$router->post('/conciliacoes/{id}/conciliar', $wrap([ConciliacaoController::class, 'conciliar']), [$auth, $empresa, $csrf]);
-$router->post('/conciliacoes/{id}/ignorar', $wrap([ConciliacaoController::class, 'ignorar']), [$auth, $empresa, $csrf]);
-$router->post('/conciliacoes/{id}/criar-lancamento', $wrap([ConciliacaoController::class, 'criarLancamento']), [$auth, $empresa, $csrf]);
+$router->get('/conciliacoes', $wrap([ConciliacaoController::class, 'index']), [$auth, $empresa, $featConciliacao]);
+$router->post('/conciliacoes/importar', $wrap([ConciliacaoController::class, 'importar']), [$auth, $empresa, $featConciliacao, $csrf]);
+$router->get('/conciliacoes/{id}', $wrap([ConciliacaoController::class, 'ver']), [$auth, $empresa, $featConciliacao]);
+$router->post('/conciliacoes/{id}/conciliar', $wrap([ConciliacaoController::class, 'conciliar']), [$auth, $empresa, $featConciliacao, $csrf]);
+$router->post('/conciliacoes/{id}/ignorar', $wrap([ConciliacaoController::class, 'ignorar']), [$auth, $empresa, $featConciliacao, $csrf]);
+$router->post('/conciliacoes/{id}/criar-lancamento', $wrap([ConciliacaoController::class, 'criarLancamento']), [$auth, $empresa, $featConciliacao, $csrf]);
 
-$router->get('/assistente', $wrap([AssistenteController::class, 'index']), [$auth, $empresa]);
-$router->post('/assistente/perguntar', $wrap([AssistenteController::class, 'perguntar']), [$auth, $empresa, $csrf]);
+$router->get('/assistente', $wrap([AssistenteController::class, 'index']), [$auth, $empresa, $featAssistente]);
+$router->post('/assistente/perguntar', $wrap([AssistenteController::class, 'perguntar']), [$auth, $empresa, $featAssistente, $csrf]);
 
 $router->get('/lancamentos', $wrap([LancamentoController::class, 'index']), [$auth, $empresa]);
 $router->get('/lancamentos/criar', $wrap([LancamentoController::class, 'criarForm']), [$auth, $empresa]);

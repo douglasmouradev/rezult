@@ -1,0 +1,35 @@
+openapi: 3.0.3
+info:
+  title: Rezult API
+  version: 1.0.0
+  description: API REST multi-tenant. Requer plano Pro ou Business com feature API.
+servers:
+  - url: https://rezult.tdesksolutions.com.br
+security:
+  - bearerAuth: []
+paths:
+  /api/v1/lancamentos:
+    get:
+      summary: Listar lançamentos
+      responses:
+        '200':
+          description: Lista de lançamentos
+    post:
+      summary: Criar lançamento (token read_write)
+      responses:
+        '201':
+          description: Criado
+  /api/v1/contas:
+    get:
+      summary: Listar contas
+  /api/v1/categorias:
+    get:
+      summary: Listar categorias
+  /api/v1/cobrancas:
+    get:
+      summary: Listar cobranças
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer

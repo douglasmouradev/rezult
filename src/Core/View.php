@@ -24,7 +24,7 @@ final class View
         $podeAprovar = $empresaId > 0 && (\App\Policies\TenantPolicy::papel($empresaId)?->podeAprovarLancamento() ?? false);
         $isSuperadmin = \App\Policies\SuperAdminPolicy::isSuperadmin();
         $navSemEmpresa = (new \App\Services\TenantSessionService())->urlNavegacaoSemEmpresa();
-        $navUrl = static fn (string $path): string => $navSemEmpresa !== '' && $path !== '/empresas' && !str_starts_with($path, '/privacidade') && !str_starts_with($path, '/superadmin')
+        $navUrl = static fn (string $path): string => $navSemEmpresa !== '' && $path !== '/empresas' && $path !== '/plano' && !str_starts_with($path, '/privacidade') && !str_starts_with($path, '/superadmin')
             ? $navSemEmpresa
             : $path;
         $notifCount = 0;

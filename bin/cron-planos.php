@@ -13,3 +13,5 @@ App::bootstrap(dirname(__DIR__));
 
 $job = new EmailJobService();
 echo 'Avisos de plano: ' . $job->enviarAvisosPlano() . "\n";
+echo 'Planos expirados desativados: ' . (new \App\Services\BillingService())->processarExpirados() . "\n";
+echo 'Planos expirados desativados: ' . (new \App\Services\BillingService())->processarExpirados() . "\n";
