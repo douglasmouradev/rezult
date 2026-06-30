@@ -105,6 +105,18 @@ composer audit
 
 CI roda migrations, audit, PHPStan e PHPUnit no GitHub Actions.
 
+## Problemas em produção
+
+```bash
+php bin/doctor.php          # diagnóstico (env, tabelas, colunas, log)
+php bin/repair-schema.php   # corrige colunas/tabelas ausentes
+php bin/migrate.php
+tail -50 storage/logs/app.log
+```
+
+Se aparecer erro de `APP_KEY`, adicione no `.env` (mín. 32 caracteres) e `HEALTH_TOKEN`.
+Após trocar `APP_KEY`, reconfigure integrações (segredos antigos ficam ilegíveis).
+
 ## PWA
 
 `manifest.json` + `public/sw.js` (cache de assets estáticos).

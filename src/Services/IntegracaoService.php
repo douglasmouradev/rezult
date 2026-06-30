@@ -136,9 +136,20 @@ final class IntegracaoService
         foreach (self::SECRET_FIELDS[$provedor] ?? [] as $field) {
             if (!empty($config[$field])) {
                 $val = (string) $config[$field];
-                $config[$field] = self::looksEncrypted($val)
-                    ? Crypto::decrypt($val, strict: true)
-                    : $val;
+                if (self::looksEncrypted($val)) {
+                    try {
+                        $config[$field] = Crypto::decrypt($val, strict: true);
+                    } catch (\Throwable) {
+                        \App\Core\Logger::error('Segredo ilegível (APP_KEY alterada?)', [
+                            'provedor' => $provedor,
+                            'field' => $field,
+                            'empresa_id' => $config['empresa_id'] ?? null,
+                        ]);
+                        $config[$field] = '';
+                    }
+                } else {
+                    $config[$field] = $val;
+                }
             }
         }
 

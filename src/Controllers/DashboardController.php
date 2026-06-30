@@ -20,9 +20,13 @@ final class DashboardController
         $dados = $this->service->dados($empresaId);
         $showOnboarding = false;
         if ($empresaId > 0) {
-            $stmt = App::pdo()->prepare('SELECT onboarding_concluido FROM empresas WHERE id = :id LIMIT 1');
-            $stmt->execute(['id' => $empresaId]);
-            $showOnboarding = (int) $stmt->fetchColumn() === 0;
+            try {
+                $stmt = App::pdo()->prepare('SELECT onboarding_concluido FROM empresas WHERE id = :id LIMIT 1');
+                $stmt->execute(['id' => $empresaId]);
+                $showOnboarding = (int) $stmt->fetchColumn() === 0;
+            } catch (\Throwable) {
+                $showOnboarding = false;
+            }
         }
 
         View::render('dashboard/index', [

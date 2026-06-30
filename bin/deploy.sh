@@ -30,6 +30,12 @@ fi
 echo "==> migrations"
 php bin/migrate.php
 
+echo "==> repair schema"
+php bin/repair-schema.php
+
+echo "==> doctor"
+php bin/doctor.php || true
+
 echo "==> permissões storage"
 chmod -R 775 storage 2>/dev/null || true
 mkdir -p storage/sessions && chmod 775 storage/sessions 2>/dev/null || true
@@ -44,3 +50,6 @@ echo "      0 4 * * *     php $ROOT/bin/cron-maintenance.php"
 echo "      0 2 * * *     php $ROOT/bin/cron-backup.php"
 echo "      0 * * * *     php $ROOT/bin/cron-automacao.php"
 echo "      0 3 * * *     php $ROOT/bin/cron-lgpd.php"
+echo ""
+echo "    Diagnóstico: php $ROOT/bin/doctor.php"
+echo "    Reparo DB:   php $ROOT/bin/repair-schema.php"

@@ -29,6 +29,7 @@ final class ErrorHandler
         Logger::error($e->getMessage(), [
             'file' => $e->getFile(),
             'line' => $e->getLine(),
+            'uri' => $_SERVER['REQUEST_URI'] ?? '',
             'trace' => $e->getTraceAsString(),
         ]);
 
