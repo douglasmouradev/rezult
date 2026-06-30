@@ -1,6 +1,6 @@
 <div class="empty-state error-page">
     <a href="/" class="brand-logo brand-logo--error" style="justify-content:center;margin-bottom:16px">
-        <img src="/assets/img/logo-rezult.svg?v=2" alt="Rezult" class="brand-logo__img" width="52" height="52" loading="lazy">
+        <img src="/assets/img/logo-rezult.png?v=7" alt="Rezult" class="brand-logo__img" width="51" height="52" loading="lazy">
     </a>
     <i class="ph ph-warning-circle"></i>
     <h1>Erro interno</h1>

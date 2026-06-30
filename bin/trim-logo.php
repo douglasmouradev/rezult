@@ -3,59 +3,38 @@
 declare(strict_types=1);
 
 /**
- * Remove faixas verdes nas bordas e fundo preto do logo PNG.
- * Uso: php bin/trim-logo.php
+ * Recorta o logo PNG original removendo faixas mint e fundo preto.
+ * Uso: php bin/trim-logo.php [arquivo_entrada] [arquivo_saida]
  */
-$path = dirname(__DIR__) . '/public/assets/img/logo-rezult.png';
-$img = imagecreatefrompng($path);
+$root = dirname(__DIR__);
+$in = $argv[1] ?? $root . '/public/assets/img/logo-rezult.png';
+$out = $argv[2] ?? $root . '/public/assets/img/logo-rezult.png';
+
+$img = imagecreatefrompng($in);
 if ($img === false) {
-    fwrite(STDERR, "Cannot load logo\n");
+    fwrite(STDERR, "Não foi possível carregar: {$in}\n");
     exit(1);
 }
 
 $w = imagesx($img);
 $h = imagesy($img);
 
-$isBackground = static function (int $r, int $g, int $b, int $a): bool {
-    if ($a > 100) {
-        return true;
-    }
-    if ($r < 40 && $g < 40 && $b < 40) {
-        return true;
-    }
-    // faixa mint clara (artefato de exportação)
-    if ($g > 165 && $r > 130 && $b > 130 && abs($r - $g) < 50) {
-        return true;
-    }
-
-    return false;
+$isPaleMint = static function (int $r, int $g, int $b): bool {
+    return $g > 155 && $r > 120 && $b > 115 && abs($r - $g) < 55;
 };
 
-$isEdgeArtifactColumn = static function ($image, int $x, int $height) use ($isBackground): bool {
-    $green = 0;
-    $total = 0;
-    for ($y = 0; $y < $height; $y++) {
-        $c = imagecolorat($image, $x, $y);
-        $a = ($c >> 24) & 0x7F;
-        $r = ($c >> 16) & 0xFF;
-        $g = ($c >> 8) & 0xFF;
-        $b = $c & 0xFF;
-        if ($isBackground($r, $g, $b, $a)) {
-            continue;
-        }
-        $total++;
-        if ($g > $r + 10 && $g > $b + 10 && $g > 80) {
-            $green++;
-        }
-    }
-    if ($total === 0) {
-        return true;
-    }
-
-    return $green / $total > 0.92;
+$isBlackBg = static function (int $r, int $g, int $b, int $a): bool {
+    return $a > 100 || ($r < 45 && $g < 45 && $b < 45);
 };
 
-// Bounding box do conteúdo real (R + seta dourada)
+$isLogoPixel = static function (int $r, int $g, int $b, int $a) use ($isPaleMint, $isBlackBg): bool {
+    if ($isBlackBg($r, $g, $b, $a) || $isPaleMint($r, $g, $b)) {
+        return false;
+    }
+
+    return true;
+};
+
 $minX = $w;
 $minY = $h;
 $maxX = 0;
@@ -68,7 +47,7 @@ for ($y = 0; $y < $h; $y++) {
         $r = ($c >> 16) & 0xFF;
         $g = ($c >> 8) & 0xFF;
         $b = $c & 0xFF;
-        if ($isBackground($r, $g, $b, $a)) {
+        if (!$isLogoPixel($r, $g, $b, $a)) {
             continue;
         }
         $minX = min($minX, $x);
@@ -78,17 +57,34 @@ for ($y = 0; $y < $h; $y++) {
     }
 }
 
-while ($maxX > $minX && $isEdgeArtifactColumn($img, $maxX, $h)) {
-    $maxX--;
-}
-while ($minX < $maxX && $isEdgeArtifactColumn($img, $minX, $h)) {
-    $minX++;
+// Remove colunas finas isoladas na borda direita (artefato verde)
+$columnScore = static function ($image, int $x, int $height) use ($isLogoPixel): int {
+    $score = 0;
+    for ($y = 0; $y < $height; $y++) {
+        $c = imagecolorat($image, $x, $y);
+        $a = ($c >> 24) & 0x7F;
+        $r = ($c >> 16) & 0xFF;
+        $g = ($c >> 8) & 0xFF;
+        $b = $c & 0xFF;
+        if ($isLogoPixel($r, $g, $b, $a)) {
+            $score++;
+        }
+    }
+
+    return $score;
+};
+
+while ($maxX > $minX) {
+    $right = $columnScore($img, $maxX, $h);
+    $inner = $columnScore($img, $maxX - 1, $h);
+    if ($right <= 3 && $right < $inner) {
+        $maxX--;
+        continue;
+    }
+    break;
 }
 
-// Remove faixa verde residual de 1–2px na borda direita do canvas original
-$maxX = max($minX, $maxX - 8);
-
-$pad = 2;
+$pad = 3;
 $minX = max(0, $minX - $pad);
 $minY = max(0, $minY - $pad);
 $maxX = min($w - 1, $maxX + $pad);
@@ -96,11 +92,11 @@ $maxY = min($h - 1, $maxY + $pad);
 $cropW = $maxX - $minX + 1;
 $cropH = $maxY - $minY + 1;
 
-$cropped = imagecreatetruecolor($cropW, $cropH);
-imagealphablending($cropped, false);
-imagesavealpha($cropped, true);
-$transparent = imagecolorallocatealpha($cropped, 0, 0, 0, 127);
-imagefilledrectangle($cropped, 0, 0, $cropW, $cropH, $transparent);
+$dst = imagecreatetruecolor($cropW, $cropH);
+imagealphablending($dst, false);
+imagesavealpha($dst, true);
+$transparent = imagecolorallocatealpha($dst, 0, 0, 0, 127);
+imagefilledrectangle($dst, 0, 0, $cropW, $cropH, $transparent);
 
 for ($y = 0; $y < $cropH; $y++) {
     for ($x = 0; $x < $cropW; $x++) {
@@ -109,14 +105,14 @@ for ($y = 0; $y < $cropH; $y++) {
         $r = ($c >> 16) & 0xFF;
         $g = ($c >> 8) & 0xFF;
         $b = $c & 0xFF;
-        if ($isBackground($r, $g, $b, $a)) {
-            imagesetpixel($cropped, $x, $y, $transparent);
+        if ($isBlackBg($r, $g, $b, $a) || $isPaleMint($r, $g, $b)) {
+            imagesetpixel($dst, $x, $y, $transparent);
             continue;
         }
-        $color = imagecolorallocatealpha($cropped, $r, $g, $b, $a);
-        imagesetpixel($cropped, $x, $y, $color);
+        $color = imagecolorallocatealpha($dst, $r, $g, $b, $a);
+        imagesetpixel($dst, $x, $y, $color);
     }
 }
 
-imagepng($cropped, $path, 9);
-echo "Logo recortado: {$cropW}x{$cropH} -> {$path}\n";
+imagepng($dst, $out, 9);
+echo "Logo limpo: {$cropW}x{$cropH} -> {$out}\n";

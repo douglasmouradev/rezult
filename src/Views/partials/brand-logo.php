@@ -11,8 +11,9 @@ $class = $class ?? '';
 $imgClass = $imgClass ?? '';
 $showText = $showText ?? false;
 $imgHeight = $imgHeight ?? 36;
-$imgWidth = $imgHeight;
-$logoSrc = '/assets/img/logo-rezult.svg?v=2';
+$logoAspect = 130 / 132;
+$imgWidth = max(1, (int) round($imgHeight * $logoAspect));
+$logoSrc = '/assets/img/logo-rezult.png?v=7';
 $tagOpen = $asLink ? '<a href="' . htmlspecialchars($href) . '"' : '<div';
 $tagClose = $asLink ? 'a' : 'div';
 ?>
