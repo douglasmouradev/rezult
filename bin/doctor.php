@@ -97,5 +97,10 @@ if (is_file($log)) {
 $sessionPath = App::basePath() . '/storage/sessions';
 $print(is_writable($sessionPath) ? 'OK' : 'FAIL', 'storage/sessions gravável');
 
+$tz = \App\Helpers\DateTimeBr::timezone();
+$diag = \App\Helpers\DateTimeBr::diagnostico($pdo);
+$print('OK', "Fuso {$tz} — PHP {$diag['php']}");
+$print($diag['mysql'] !== null ? 'OK' : 'WARN', 'MySQL NOW(): ' . ($diag['mysql'] ?? 'indisponível'));
+
 echo PHP_EOL . ($ok ? "Diagnóstico: tudo OK\n" : "Diagnóstico: há problemas — rode php bin/repair-schema.php\n");
 exit($ok ? 0 : 1);

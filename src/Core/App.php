@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Core;
 
+use App\Helpers\DateTimeBr;
 use App\Helpers\Env;
 use App\Helpers\Session;
 use PDO;
@@ -18,6 +19,8 @@ final class App
         Env::load($basePath . '/.env');
         self::$config['app'] = require $basePath . '/config/app.php';
         self::$config['database'] = require $basePath . '/config/database.php';
+
+        DateTimeBr::init((string) self::config('timezone', 'America/Sao_Paulo'));
 
         self::validateEnvironment();
 
@@ -59,6 +62,8 @@ final class App
                 $db['charset']
             );
             self::$pdo = new PDO($dsn, $db['username'], $db['password'], $db['options']);
+            $offset = DateTimeBr::mysqlOffset();
+            self::$pdo->exec("SET time_zone = " . self::$pdo->quote($offset));
         }
         return self::$pdo;
     }

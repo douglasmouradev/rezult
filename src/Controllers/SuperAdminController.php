@@ -262,6 +262,30 @@ final class SuperAdminController
         View::redirect('/superadmin/empresas');
     }
 
+    public function alterarPlanoEmpresa(): void
+    {
+        $id = (int) ($_POST['empresa_id'] ?? 0);
+        if ($id <= 0) {
+            Session::flash('error', 'Loja inválida.');
+            View::redirect('/superadmin/empresas');
+        }
+
+        try {
+            $this->service->alterarPlanoEmpresa($id, $_POST);
+            AuditoriaService::registrar('superadmin_plano_alterado', 'empresa', $id, [
+                'plano' => $_POST['plano'] ?? null,
+                'plano_ativo' => !empty($_POST['plano_ativo']),
+                'plano_expira_em' => $_POST['plano_expira_em'] ?? null,
+                'trial_ate' => $_POST['trial_ate'] ?? null,
+            ]);
+            Session::flash('success', 'Plano da loja atualizado.');
+        } catch (\InvalidArgumentException $e) {
+            Session::flash('error', $e->getMessage());
+        }
+
+        View::redirect('/superadmin/empresas');
+    }
+
     public function logins(): void
     {
         View::render('superadmin/logins', [
@@ -276,6 +300,7 @@ final class SuperAdminController
             'title' => 'Sistema — Superadmin',
             'logs' => \App\Core\Logger::tail(300),
             'migrations' => $this->service->statusMigrations(),
+            'relogio' => \App\Helpers\DateTimeBr::diagnostico(\App\Core\App::pdo()),
         ]);
     }
 

@@ -343,6 +343,9 @@ final class SuperAdminService
         if ($temStatus) {
             $cols .= ', e.ativo, e.plano_ativo, e.plano_expira_em';
         }
+        if ($this->temColuna('empresas', 'trial_ate')) {
+            $cols .= ', e.trial_ate';
+        }
 
         $where = '';
         if ($temStatus) {
@@ -429,11 +432,49 @@ final class SuperAdminService
         );
         $stmt->execute([
             'p' => $plano,
-            'pa' => !empty($dados['plano_ativo']) ? 1 : 0,
-            'a' => !empty($dados['ativo']) ? 1 : 0,
+            'pa' => (int) ($dados['plano_ativo'] ?? $empresa['plano_ativo'] ?? 1),
+            'a' => (int) ($dados['ativo'] ?? $empresa['ativo'] ?? 1),
             'exp' => $expiraSql,
             'id' => $id,
         ]);
+
+        return true;
+    }
+
+    /** @param array<string, mixed> $dados */
+    public function alterarPlanoEmpresa(int $id, array $dados): bool
+    {
+        $empresa = (new PlanService())->buscarEmpresa($id);
+        if (!$empresa) {
+            return false;
+        }
+
+        $plano = (string) ($dados['plano'] ?? $empresa['plano'] ?? 'starter');
+        if (!in_array($plano, ['starter', 'pro', 'business'], true)) {
+            throw new \InvalidArgumentException('Plano inválido.');
+        }
+
+        $expira = trim((string) ($dados['plano_expira_em'] ?? ''));
+        $expiraSql = $expira !== '' ? date('Y-m-d H:i:s', strtotime(str_replace('T', ' ', $expira))) : null;
+
+        $trial = trim((string) ($dados['trial_ate'] ?? ''));
+        $trialSql = $trial !== '' ? date('Y-m-d H:i:s', strtotime(str_replace('T', ' ', $trial))) : null;
+
+        $sets = ['plano = :p', 'plano_ativo = :pa', 'plano_expira_em = :exp'];
+        $params = [
+            'p' => $plano,
+            'pa' => !empty($dados['plano_ativo']) ? 1 : 0,
+            'exp' => $expiraSql,
+            'id' => $id,
+        ];
+
+        if ($this->temColuna('empresas', 'trial_ate')) {
+            $sets[] = 'trial_ate = :trial';
+            $params['trial'] = $trialSql;
+        }
+
+        $sql = 'UPDATE empresas SET ' . implode(', ', $sets) . ' WHERE id = :id';
+        App::pdo()->prepare($sql)->execute($params);
 
         return true;
     }

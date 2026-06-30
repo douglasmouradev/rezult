@@ -118,6 +118,7 @@ $router->get('/superadmin/empresas', $wrap([SuperAdminController::class, 'empres
 $router->post('/superadmin/empresas/atualizar', $wrap([SuperAdminController::class, 'atualizarEmpresa']), [$auth, $superadmin, $csrf]);
 $router->post('/superadmin/empresas/status', $wrap([SuperAdminController::class, 'alternarAtivo']), [$auth, $superadmin, $csrf]);
 $router->post('/superadmin/empresas/plano', $wrap([SuperAdminController::class, 'alternarPlano']), [$auth, $superadmin, $csrf]);
+$router->post('/superadmin/empresas/plano/alterar', $wrap([SuperAdminController::class, 'alterarPlanoEmpresa']), [$auth, $superadmin, $csrf]);
 $router->get('/superadmin/logins', $wrap([SuperAdminController::class, 'logins']), [$auth, $superadmin]);
 $router->get('/superadmin/sistema', $wrap([SuperAdminController::class, 'sistema']), [$auth, $superadmin]);
 $router->post('/superadmin/promover', $wrap([SuperAdminController::class, 'promover']), [$auth, $superadmin, $csrf]);

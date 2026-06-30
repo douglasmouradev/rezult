@@ -35,6 +35,8 @@ TRUSTED_PROXIES=127.0.0.1
 
 Em produção, o bootstrap **bloqueia** a aplicação sem `APP_KEY` (32+ chars) e `HEALTH_TOKEN`. Com `FINANCIAL_MODE=live`, cobranças simuladas são bloqueadas — configure gateway em Integrações.
 
+Fuso horário: `APP_TIMEZONE=America/Sao_Paulo` (padrão). Verifique em Superadmin → Sistema.
+
 ## Planos e features
 
 | Plano | Empresas | Usuários | API | Webhooks | Integrações | NFS-e / OF / IA |

@@ -22,4 +22,5 @@ return [
     'app_key' => $_ENV['APP_KEY'] ?? '',
     'financial_mode' => $_ENV['FINANCIAL_MODE'] ?? 'demo',
     'trusted_proxies' => $_ENV['TRUSTED_PROXIES'] ?? '',
+    'timezone' => $_ENV['APP_TIMEZONE'] ?? 'America/Sao_Paulo',
 ];

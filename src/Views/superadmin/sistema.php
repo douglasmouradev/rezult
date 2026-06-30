@@ -1,9 +1,31 @@
 <div class="page-header">
     <h1><i class="ph ph-wrench"></i> Sistema</h1>
-    <p class="text-muted">Logs da aplicação e status das migrations</p>
+    <p class="text-muted">Relógio do servidor, logs e status das migrations</p>
 </div>
 
 <?php require __DIR__ . '/_nav.php'; ?>
+
+<div class="card" style="margin-bottom:20px">
+    <div class="card-header"><h3 class="card-title">Data e hora do servidor</h3></div>
+    <div style="padding:16px 20px;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px">
+        <div>
+            <div class="text-muted" style="font-size:0.8rem">PHP (aplicação)</div>
+            <strong style="font-size:1.25rem"><?= htmlspecialchars($relogio['php']) ?></strong>
+        </div>
+        <div>
+            <div class="text-muted" style="font-size:0.8rem">MySQL (sessão)</div>
+            <strong style="font-size:1.25rem"><?= htmlspecialchars($relogio['mysql'] ?? '—') ?></strong>
+        </div>
+        <div>
+            <div class="text-muted" style="font-size:0.8rem">Fuso configurado</div>
+            <strong><?= htmlspecialchars($relogio['timezone']) ?></strong>
+            <div class="td-muted">offset <?= htmlspecialchars($relogio['offset']) ?></div>
+        </div>
+    </div>
+    <p class="text-muted" style="padding:0 20px 16px;font-size:13px;margin:0">
+        Ajuste em <code>APP_TIMEZONE</code> no <code>.env</code> (padrão: <code>America/Sao_Paulo</code>).
+    </p>
+</div>
 
 <div class="grid-2" style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
     <div class="card">
@@ -22,7 +44,7 @@
                         <span class="badge badge-pendente">Pendente</span>
                         <?php endif; ?>
                     </td>
-                    <td><?= $m['aplicado_em'] ? date('d/m/Y H:i', strtotime($m['aplicado_em'])) : '—' ?></td>
+                    <td><?= $m['aplicado_em'] ? \App\Helpers\DateTimeBr::format($m['aplicado_em']) : '—' ?></td>
                 </tr>
                 <?php endforeach; ?>
                 </tbody>
