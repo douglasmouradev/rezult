@@ -43,6 +43,7 @@ use App\Middleware\RbacMiddleware;
 use App\Controllers\PlanoController;
 use App\Middleware\PlanFeatureMiddleware;
 use App\Middleware\SuperAdminMiddleware;
+use App\Middleware\WebhookRateLimitMiddleware;
 
 /** @var Router $router */
 $wrap = fn (array $h): callable => fn (...$p) => (new $h[0]())->{$h[1]}(...$p);
@@ -63,10 +64,11 @@ $featCobrancas = new PlanFeatureMiddleware('cobrancas');
 $featNfse = new PlanFeatureMiddleware('nfse');
 $featAssistente = new PlanFeatureMiddleware('assistente_ia');
 $featConciliacao = new PlanFeatureMiddleware('conciliacao');
+$webhookRate = new WebhookRateLimitMiddleware('webhook_asaas', 120, 1);
 
 $router->get('/health', $wrap([HealthController::class, 'check']));
 
-$router->post('/webhooks/gateway/asaas', $wrap([GatewayWebhookController::class, 'asaas']));
+$router->post('/webhooks/gateway/asaas', $wrap([GatewayWebhookController::class, 'asaas']), [$webhookRate]);
 
 $router->get('/login', $wrap([AuthController::class, 'loginForm']), [$guest]);
 $router->post('/login', $wrap([AuthController::class, 'login']), [$guest, $csrf]);
@@ -172,8 +174,8 @@ $router->post('/contas', $wrap([ContaController::class, 'criar']), [$auth, $empr
 $router->get('/contas/{id}/editar', $wrap([ContaController::class, 'editarForm']), [$auth, $empresa, $rbac]);
 $router->post('/contas/{id}', $wrap([ContaController::class, 'editar']), [$auth, $empresa, $rbac, $csrf]);
 $router->get('/contas/{id}/extrato', $wrap([ContaController::class, 'extrato']), [$auth, $empresa]);
-$router->get('/contas/transferir', $wrap([ContaController::class, 'transferirForm']), [$auth, $empresa]);
-$router->post('/contas/transferir', $wrap([ContaController::class, 'transferir']), [$auth, $empresa, $csrf]);
+$router->get('/contas/transferir', $wrap([ContaController::class, 'transferirForm']), [$auth, $empresa, $rbac]);
+$router->post('/contas/transferir', $wrap([ContaController::class, 'transferir']), [$auth, $empresa, $rbac, $csrf]);
 
 $router->get('/categorias', $wrap([CategoriaController::class, 'index']), [$auth, $empresa]);
 $router->post('/categorias', $wrap([CategoriaController::class, 'salvar']), [$auth, $empresa, $rbac, $csrf]);

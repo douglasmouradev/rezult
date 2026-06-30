@@ -26,6 +26,7 @@ final class NotaFiscalController
         View::render('notas-fiscais/index', [
             'title' => 'Notas fiscais (NFS-e)',
             'resultado' => $this->model->listar($this->eid(), max(1, (int) ($_GET['page'] ?? 1))),
+            'isProduction' => \App\Core\App::config('env') === 'production',
         ]);
     }
 
@@ -61,8 +62,12 @@ final class NotaFiscalController
 
     public function emitir(int $id): void
     {
-        $this->service->emitir($id, $this->eid());
-        Session::flash('success', 'NFS-e emitida (demonstração — integração prefeitura em evolução).');
+        try {
+            $this->service->emitir($id, $this->eid());
+            Session::flash('success', 'NFS-e emitida em modo demonstração.');
+        } catch (\RuntimeException $e) {
+            Session::flash('error', $e->getMessage());
+        }
         View::redirect('/notas-fiscais/' . $id);
     }
 }

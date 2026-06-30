@@ -7,8 +7,9 @@
     <meta name="csrf-token" content="<?= htmlspecialchars($csrf ?? '') ?>">
     <title><?= $title ?? 'Rezult' ?></title>
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/@phosphor-icons/web"></script>
-    <link rel="stylesheet" href="/assets/css/app.css?v=corp6">
+    <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+    <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/bold/style.css">
+    <link rel="stylesheet" href="/assets/css/app.css?v=corp10">
 </head>
 <body class="guest-body">
     <div class="guest-wrap">

@@ -18,6 +18,15 @@
     <button class="btn btn-primary mt-2">Gerar token</button>
 </form>
 <div class="card">
+<?php if (empty($tokens)): ?>
+    <?php
+    $icone = 'key';
+    $titulo = 'Nenhum token API';
+    $texto = 'Gere um token para integrar sistemas externos via API REST.';
+    $acaoUrl = null;
+    require __DIR__ . '/../partials/empty-state.php';
+    ?>
+<?php else: ?>
 <table class="data-table">
 <thead><tr><th>Nome</th><th>Prefixo</th><th>Escopo</th><th>Último uso</th><th>Criado</th><th></th></tr></thead>
 <tbody><?php foreach ($tokens as $t): ?>
@@ -36,4 +45,5 @@
 </tr>
 <?php endforeach; ?></tbody>
 </table>
+<?php endif; ?>
 </div>

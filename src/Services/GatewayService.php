@@ -11,7 +11,10 @@ use App\Helpers\FinancialMode;
 /** Emissão de cobranças via gateway configurado ou modo demonstração. */
 final class GatewayService
 {
-    public function __construct(private IntegracaoService $integracoes = new IntegracaoService()) {}
+    public function __construct(
+        private IntegracaoService $integracoes = new IntegracaoService(),
+        private GatewayCustomerService $customers = new GatewayCustomerService(),
+    ) {}
 
     /**
      * @param array<string, mixed> $cobranca
@@ -34,6 +37,34 @@ final class GatewayService
         }
 
         return $this->emitirSimulado($cobranca);
+    }
+
+    public function cancelarNoGateway(int $empresaId, string $gatewayId, string $provedor = 'asaas'): void
+    {
+        if ($gatewayId === '' || !$this->integracoes->gatewayAtivo($empresaId)) {
+            return;
+        }
+
+        $cfg = $this->integracoes->getConfig($empresaId, IntegracaoService::PROVEDOR_GATEWAY);
+        $config = $cfg['config'];
+        if (($config['provedor'] ?? 'asaas') !== $provedor) {
+            return;
+        }
+
+        $apiKey = (string) ($config['api_key'] ?? '');
+        if ($apiKey === '') {
+            return;
+        }
+
+        $sandbox = ($config['ambiente'] ?? 'sandbox') !== 'producao';
+        $client = new AsaasClient($apiKey, $sandbox);
+        $client->delete('payments/' . $gatewayId);
+
+        Logger::info('Cobrança cancelada no gateway', [
+            'empresa_id' => $empresaId,
+            'gateway_id' => $gatewayId,
+            'provedor' => $provedor,
+        ]);
     }
 
     public function modoAtual(int $empresaId): string
@@ -67,16 +98,21 @@ final class GatewayService
         $cobrancaId = (int) ($cobranca['id'] ?? 0);
         $externalRef = "rezult:{$empresaId}:{$cobrancaId}";
 
-        $customerBody = [
-            'name' => (string) $cobranca['cliente_nome'],
-            'email' => (string) ($cobranca['cliente_email'] ?? '') ?: null,
-            'notificationDisabled' => true,
-        ];
-        $customerBody = array_filter($customerBody, fn ($v) => $v !== null && $v !== '');
-        $customer = $client->post('customers', $customerBody);
-        $customerId = (string) ($customer['id'] ?? '');
-        if ($customerId === '') {
-            throw new \RuntimeException('Não foi possível criar cliente no Asaas.');
+        $chave = GatewayCustomerService::chaveCliente($cobranca);
+        $customerId = $this->customers->buscar($empresaId, 'asaas', $chave);
+        if ($customerId === null) {
+            $customerBody = [
+                'name' => (string) $cobranca['cliente_nome'],
+                'email' => (string) ($cobranca['cliente_email'] ?? '') ?: null,
+                'notificationDisabled' => true,
+            ];
+            $customerBody = array_filter($customerBody, fn ($v) => $v !== null && $v !== '');
+            $customer = $client->post('customers', $customerBody);
+            $customerId = (string) ($customer['id'] ?? '');
+            if ($customerId === '') {
+                throw new \RuntimeException('Não foi possível criar cliente no Asaas.');
+            }
+            $this->customers->salvar($empresaId, 'asaas', $chave, $customerId);
         }
 
         $tipo = ($cobranca['tipo'] ?? 'pix') === 'boleto' ? 'BOLETO' : 'PIX';

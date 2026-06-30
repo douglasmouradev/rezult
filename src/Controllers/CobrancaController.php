@@ -57,9 +57,14 @@ final class CobrancaController
     {
         $eid = $this->eid();
         $id = !empty($_POST['id']) ? (int) $_POST['id'] : null;
-        $this->service->salvar($eid, $_POST, $id);
-        Session::flash('success', 'Cobrança salva.');
-        View::redirect('/cobrancas');
+        try {
+            $newId = $this->service->salvar($eid, $_POST, $id);
+            Session::flash('success', 'Cobrança salva.');
+            View::redirect('/cobrancas/' . ($id ?: $newId));
+        } catch (\InvalidArgumentException $e) {
+            Session::flash('error', $e->getMessage());
+            View::redirect($id ? '/cobrancas/' . $id . '/editar' : '/cobrancas/criar');
+        }
     }
 
     public function emitir(int $id): void

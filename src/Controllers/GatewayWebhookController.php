@@ -7,6 +7,7 @@ namespace App\Controllers;
 use App\Core\App;
 use App\Core\Logger;
 use App\Core\View;
+use App\Helpers\GatewayWebhookAuth;
 use App\Services\CobrancaService;
 use App\Services\IntegracaoService;
 
@@ -56,10 +57,11 @@ final class GatewayWebhookController
         $cobrancaId = (int) $cobranca['id'];
 
         $cfg = (new IntegracaoService())->getConfig($empresaId, IntegracaoService::PROVEDOR_GATEWAY);
-        $expectedToken = trim((string) ($cfg['config']['webhook_token'] ?? ''));
+        $expectedToken = (string) ($cfg['config']['webhook_token'] ?? '');
         $receivedToken = (string) ($_SERVER['HTTP_ASAAS_ACCESS_TOKEN'] ?? '');
-        if ($expectedToken !== '' && !hash_equals($expectedToken, $receivedToken)) {
-            Logger::info('Asaas webhook token inválido', ['empresa_id' => $empresaId]);
+
+        if (!GatewayWebhookAuth::aceita((string) App::config('env', 'local'), $expectedToken, $receivedToken)) {
+            Logger::info('Asaas webhook rejeitado', ['empresa_id' => $empresaId]);
             $this->json(403, ['error' => 'Forbidden']);
         }
 

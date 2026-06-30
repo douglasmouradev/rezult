@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Core\App;
+use App\Helpers\NfseMode;
 use App\Helpers\Sanitize;
 use App\Models\Lancamento;
 use App\Models\NotaFiscal;
@@ -38,6 +40,13 @@ final class NotaFiscalService
         $nf = $this->model->find($id, $empresaId);
         if (!$nf) {
             TenantPolicy::forbidden();
+        }
+
+        $allowDemo = filter_var($_ENV['NFSE_ALLOW_DEMO'] ?? false, FILTER_VALIDATE_BOOLEAN);
+        if (!NfseMode::permiteDemonstracao((string) App::config('env', 'local'), $allowDemo)) {
+            throw new \RuntimeException(
+                'Emissão NFS-e em produção requer integração com a prefeitura. Entre em contato com o suporte.'
+            );
         }
 
         $numero = str_pad((string) $id, 6, '0', STR_PAD_LEFT);

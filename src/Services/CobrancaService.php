@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\Helpers\MailTemplate;
 use App\Helpers\Sanitize;
+use App\Helpers\Validator;
 use App\Models\Cobranca;
 use App\Models\Lancamento;
 use App\Policies\TenantPolicy;
@@ -19,13 +20,32 @@ final class CobrancaService
 
     public function salvar(int $empresaId, array $input, ?int $id = null): int
     {
+        $v = (new Validator($input))
+            ->required('cliente_nome', 'descricao', 'valor', 'vencimento')
+            ->email('cliente_email')
+            ->in('tipo', ['pix', 'boleto', ''])
+            ->in('status', ['rascunho', 'emitida', 'paga', 'vencida', 'cancelada', '']);
+        if ($v->fails()) {
+            throw new \InvalidArgumentException($v->first() ?? 'Dados inválidos.');
+        }
+
+        $valor = abs(Sanitize::money($input['valor'] ?? '0'));
+        if ($valor <= 0) {
+            throw new \InvalidArgumentException('Valor deve ser maior que zero.');
+        }
+
+        $vencimento = (string) $input['vencimento'];
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $vencimento)) {
+            throw new \InvalidArgumentException('Data de vencimento inválida.');
+        }
+
         $data = [
             'empresa_id' => $empresaId,
             'cliente_nome' => Sanitize::raw($input['cliente_nome']),
             'cliente_email' => Sanitize::raw($input['cliente_email'] ?? '') ?: null,
             'descricao' => Sanitize::raw($input['descricao']),
-            'valor' => abs(Sanitize::money($input['valor'] ?? '0')),
-            'vencimento' => $input['vencimento'],
+            'valor' => $valor,
+            'vencimento' => $vencimento,
             'tipo' => in_array($input['tipo'] ?? '', ['pix', 'boleto'], true) ? $input['tipo'] : 'pix',
             'status' => $input['status'] ?? 'rascunho',
             'lancamento_id' => !empty($input['lancamento_id']) ? (int) $input['lancamento_id'] : null,
@@ -81,6 +101,22 @@ final class CobrancaService
         if (!$c || in_array($c['status'], ['paga', 'cancelada'], true)) {
             return;
         }
+
+        if (!empty($c['gateway_id'])) {
+            try {
+                (new GatewayService())->cancelarNoGateway(
+                    $empresaId,
+                    (string) $c['gateway_id'],
+                    (string) ($c['gateway_provedor'] ?? 'asaas'),
+                );
+            } catch (\Throwable $e) {
+                \App\Core\Logger::warning('Falha ao cancelar cobrança no gateway', [
+                    'cobranca_id' => $id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
         $this->model->save(['id' => $id, 'status' => 'cancelada'], $empresaId);
         if (!empty($c['lancamento_id'])) {
             $lanc = $this->lancamentos->find((int) $c['lancamento_id'], $empresaId);

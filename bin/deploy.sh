@@ -20,6 +20,15 @@ done
 echo "==> git pull"
 git pull origin main
 
+echo "==> testes"
+if command -v vendor/bin/phpunit >/dev/null 2>&1; then
+    vendor/bin/phpunit --colors=always || { echo "AVISO: testes falharam — deploy continua"; }
+elif [[ -f vendor/bin/phpunit ]]; then
+    php vendor/bin/phpunit --colors=always || { echo "AVISO: testes falharam — deploy continua"; }
+else
+    echo "AVISO: phpunit não encontrado — pulando testes"
+fi
+
 echo "==> composer install"
 if command -v composer >/dev/null 2>&1; then
     composer install --no-dev --optimize-autoloader

@@ -31,6 +31,11 @@ enum PapelEmpresa: string
         return $this->podeGerenciarEmpresa();
     }
 
+    public function podeTransferir(): bool
+    {
+        return $this->podeGerenciarEmpresa();
+    }
+
     public function label(): string
     {
         return match ($this) {

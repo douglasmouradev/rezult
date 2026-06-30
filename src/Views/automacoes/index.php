@@ -32,13 +32,23 @@
 </div>
 <button class="btn-primary">Criar regra</button></form></div>
 <div class="card"><h3>Regras ativas</h3>
+<?php if (empty($regras)): ?>
+    <?php
+    $icone = 'lightning';
+    $titulo = 'Nenhuma automação';
+    $texto = 'Crie regras para categorizar, notificar ou gerar lançamentos automaticamente.';
+    $acaoUrl = null;
+    require __DIR__ . '/../partials/empty-state.php';
+    ?>
+<?php else: ?>
 <table><thead><tr><th>Nome</th><th>Gatilho</th><th>Ação</th><th></th></tr></thead><tbody>
 <?php foreach ($regras as $r): ?>
 <tr><td><?= htmlspecialchars($r['nome']) ?></td><td><?= $r['gatilho'] ?></td><td><?= $r['acao'] ?></td>
 <td>
 <form method="post" action="/automacoes/<?= $r['id'] ?>/toggle" style="display:inline"><input type="hidden" name="_csrf" value="<?= $csrf ?>"><button class="btn-ghost btn-sm"><?= $r['ativo']?'Desativar':'Ativar' ?></button></form>
 <form method="post" action="/automacoes/<?= $r['id'] ?>/excluir" style="display:inline"><input type="hidden" name="_csrf" value="<?= $csrf ?>"><button class="btn-ghost btn-sm">Excluir</button></form>
-</td></tr><?php endforeach; ?></tbody></table></div></div>
+</td></tr><?php endforeach; ?></tbody></table>
+<?php endif; ?></div></div>
 <script>
 document.getElementById('acao-select')?.addEventListener('change', function() {
     document.querySelectorAll('.acao-fields').forEach(el => el.style.display = 'none');

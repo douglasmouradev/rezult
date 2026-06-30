@@ -30,7 +30,7 @@
 
     <div class="card">
         <h3>Fazer upgrade</h3>
-        <p class="text-muted">Solicite um plano superior. Integração com gateway de pagamento (Asaas) pode ser configurada via <code>ASAAS_API_KEY</code> no futuro.</p>
+        <p class="text-muted">Solicite um plano superior. Nossa equipe processará o upgrade e entrará em contato.</p>
         <?php foreach (['pro', 'business'] as $p):
             if (($r['plano'] ?? 'starter') === $p) {
                 continue;

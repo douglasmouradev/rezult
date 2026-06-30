@@ -52,7 +52,7 @@ try {
 $tabelasCriticas = [
     'empresas', 'lancamentos', 'categorias', 'contas', 'orcamentos',
     'cobrancas', 'conciliacoes', 'integracoes', 'webhooks', 'notificacoes',
-    'centros_custo', 'metas', 'contatos', 'api_tokens',
+    'centros_custo', 'metas', 'contatos', 'api_tokens', 'gateway_customers',
 ];
 
 foreach ($tabelasCriticas as $t) {

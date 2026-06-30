@@ -8,6 +8,15 @@
     </div>
 </form>
 <div class="card">
+<?php if (empty($centros)): ?>
+    <?php
+    $icone = 'tree-structure';
+    $titulo = 'Nenhum centro de custo';
+    $texto = 'Organize despesas e receitas por departamento ou projeto.';
+    $acaoUrl = null;
+    require __DIR__ . '/../partials/empty-state.php';
+    ?>
+<?php else: ?>
 <table class="data-table">
 <thead><tr><th>Código</th><th>Nome</th><th class="th-actions">Ações</th></tr></thead>
 <tbody><?php foreach ($centros as $c): ?>
@@ -32,4 +41,5 @@
 </tr>
 <?php endforeach; ?></tbody>
 </table>
+<?php endif; ?>
 </div>

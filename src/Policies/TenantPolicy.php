@@ -99,6 +99,13 @@ final class TenantPolicy
         }
     }
 
+    public static function abortUnlessCanTransfer(): void
+    {
+        if (!self::papel(self::empresaId())?->podeTransferir()) {
+            self::forbidden();
+        }
+    }
+
     public static function forbidden(): never
     {
         Session::flash('error', 'Acesso negado.');

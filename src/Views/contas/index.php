@@ -6,6 +6,18 @@
         <a href="/contas/criar" class="btn-primary"><i class="ph ph-plus"></i> Nova conta</a>
     </div>
 </div>
+<?php if (empty($contas)): ?>
+<div class="card data-card">
+    <?php
+    $icone = 'wallet';
+    $titulo = 'Nenhuma conta bancária';
+    $texto = 'Cadastre sua primeira conta para registrar lançamentos e acompanhar saldos.';
+    $acaoUrl = '/contas/criar';
+    $acaoLabel = 'Criar conta';
+    require __DIR__ . '/../partials/empty-state.php';
+    ?>
+</div>
+<?php else: ?>
 <div class="grid-2">
 <?php foreach ($contas as $c): ?>
 <div class="card card-interactive account-card">
@@ -24,3 +36,4 @@
 </div>
 <?php endforeach; ?>
 </div>
+<?php endif; ?>

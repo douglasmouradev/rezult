@@ -18,6 +18,16 @@
 </form>
 
 <div class="card">
+<?php if (empty($webhooks)): ?>
+    <?php
+    $icone = 'broadcast';
+    $titulo = 'Nenhum webhook';
+    $texto = 'Configure URLs para receber eventos do Rezult em tempo real.';
+    $acaoUrl = null;
+    $acaoLabel = null;
+    require __DIR__ . '/../partials/empty-state.php';
+    ?>
+<?php else: ?>
 <table class="data-table">
 <thead><tr><th>URL</th><th>Eventos</th><th>Ativo</th><th>Criado</th><th></th></tr></thead>
 <tbody>
@@ -39,4 +49,5 @@
 <?php endforeach; ?>
 </tbody>
 </table>
+<?php endif; ?>
 </div>

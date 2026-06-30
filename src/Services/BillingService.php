@@ -48,7 +48,7 @@ final class BillingService
         Session::flash(
             'success',
             'Solicitação de upgrade para ' . $this->plan->planoLabel($planoDesejado)
-            . ' registrada. Nossa equipe entrará em contato ou configure ASAAS_API_KEY para checkout automático.'
+            . ' registrada. Nossa equipe entrará em contato em breve.'
         );
     }
 

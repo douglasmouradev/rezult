@@ -7,6 +7,16 @@
     <a href="?<?= http_build_query(array_merge($periodo, ['formato' => 'pdf'])) ?>" class="btn btn-secondary btn-sm">Exportar PDF</a>
 </form>
 <div class="card table-wrap">
+<?php if (empty($dados)): ?>
+    <?php
+    $icone = 'chart-line-up';
+    $titulo = 'Sem movimentação no período';
+    $texto = 'Ajuste o filtro de datas ou registre lançamentos para ver o fluxo de caixa.';
+    $acaoUrl = '/lancamentos/criar';
+    $acaoLabel = 'Novo lançamento';
+    require __DIR__ . '/../partials/empty-state.php';
+    ?>
+<?php else: ?>
 <table>
 <thead><tr><th>Data</th><th>Entradas</th><th>Saídas</th><th>Saldo dia</th></tr></thead>
 <tbody>
@@ -20,4 +30,5 @@
 <?php endforeach; ?>
 </tbody>
 </table>
+<?php endif; ?>
 </div>

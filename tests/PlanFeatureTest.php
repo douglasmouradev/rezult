@@ -20,5 +20,12 @@ final class PlanFeatureTest extends TestCase
         $this->assertSame(0, $plan->limites()['starter']['api_tokens']);
         $this->assertSame(3, $plan->limites()['pro']['api_tokens']);
         $this->assertNull($plan->limites()['business']['api_tokens']);
+    public function testBusinessTemNfseEOpenFinance(): void
+    {
+        $plan = new \App\Services\PlanService();
+        $this->assertContains('nfse', $plan->featuresPlano('business'));
+        $this->assertContains('open_finance', $plan->featuresPlano('business'));
+        $this->assertNotContains('nfse', $plan->featuresPlano('pro'));
+        $this->assertNotContains('open_finance', $plan->featuresPlano('pro'));
     }
 }

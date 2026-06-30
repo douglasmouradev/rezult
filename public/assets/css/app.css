@@ -1573,6 +1573,11 @@ tbody tr:last-child td { border-bottom: none; }
 .onboarding-steps { margin: 12px 0 16px; padding-left: 20px; line-height: 1.8; }
 .onboarding-steps a { color: var(--primary); font-weight: 500; }
 .nav-item--locked { opacity: 0.72; }
+.card--disabled {
+  opacity: 0.85;
+  background: var(--accent-dim);
+}
+.card--disabled .card-title { color: var(--text-muted); }
 .nav-item .nav-badge {
   margin-left: auto;
   font-size: 0.65rem;

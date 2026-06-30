@@ -3,6 +3,15 @@
     <p class="text-muted">Últimas 200 ações registradas</p>
 </div>
 <div class="card table-card">
+<?php if (empty($registros)): ?>
+    <?php
+    $icone = 'clipboard-text';
+    $titulo = 'Nenhum registro';
+    $texto = 'Ações importantes da sua empresa aparecerão aqui.';
+    $acaoUrl = null;
+    require __DIR__ . '/../partials/empty-state.php';
+    ?>
+<?php else: ?>
     <table class="data-table">
         <thead>
             <tr><th>Data</th><th>Usuário</th><th>Ação</th><th>Entidade</th><th>IP</th></tr>
@@ -19,4 +28,5 @@
         <?php endforeach; ?>
         </tbody>
     </table>
+<?php endif; ?>
 </div>
