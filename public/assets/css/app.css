@@ -1432,8 +1432,13 @@ tbody tr:last-child td { border-bottom: none; }
   justify-content: center;
   background: var(--primary);
   color: #fff;
-  font-size: 1.5rem;
+  font-size: 1.65rem;
   box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+}
+.onboarding-welcome__icon .ph,
+.onboarding-step__icon .ph {
+  display: block;
+  line-height: 1;
 }
 .onboarding-welcome__title {
   margin: 0 0 4px;
@@ -1482,16 +1487,35 @@ tbody tr:last-child td { border-bottom: none; }
   justify-content: center;
 }
 .onboarding-step__icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
-  background: var(--accent-dim);
-  color: var(--accent);
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.15rem;
+  font-size: 1.35rem;
   margin-bottom: 10px;
+  border: 1px solid transparent;
+}
+.onboarding-step--step-bank .onboarding-step__icon {
+  background: var(--primary-dim);
+  color: var(--primary);
+  border-color: rgba(37, 99, 235, 0.2);
+}
+.onboarding-step--step-categories .onboarding-step__icon {
+  background: var(--green-dim);
+  color: var(--green);
+  border-color: rgba(4, 120, 87, 0.2);
+}
+.onboarding-step--step-entry .onboarding-step__icon {
+  background: #fff7ed;
+  color: #c2410c;
+  border-color: rgba(194, 65, 12, 0.2);
+}
+.onboarding-step--step-dashboard .onboarding-step__icon {
+  background: #f5f3ff;
+  color: #6d28d9;
+  border-color: rgba(109, 40, 217, 0.2);
 }
 .onboarding-step__body strong {
   display: block;

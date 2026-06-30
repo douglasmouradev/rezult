@@ -5,10 +5,10 @@ $d = $dados;
 <?php if (!empty($showOnboarding)): ?>
 <?php
 $onboardingSteps = [
-    ['wallet', 'Conta bancária', 'Cadastre onde entra e sai o dinheiro.', $navUrl('/contas/criar'), 'Cadastrar'],
-    ['tag', 'Categorias', 'Organize receitas e despesas por tipo.', $navUrl('/categorias'), 'Ver categorias'],
-    ['receipt', 'Primeiro lançamento', 'Registre uma movimentação real.', $navUrl('/lancamentos/criar'), 'Criar lançamento'],
-    ['chart-pie', 'Dashboard', 'Acompanhe saldo, fluxo e relatórios.', $navUrl('/dashboard'), null],
+    ['bank', 'Conta bancária', 'Cadastre onde entra e sai o dinheiro.', $navUrl('/contas/criar'), 'Cadastrar', 'step-bank'],
+    ['squares-four', 'Categorias', 'Organize receitas e despesas por tipo.', $navUrl('/categorias'), 'Ver categorias', 'step-categories'],
+    ['receipt', 'Primeiro lançamento', 'Registre uma movimentação real.', $navUrl('/lancamentos/criar'), 'Criar lançamento', 'step-entry'],
+    ['chart-bar', 'Dashboard', 'Acompanhe saldo, fluxo e relatórios.', $navUrl('/dashboard'), 'Explorar', 'step-dashboard'],
 ];
 ?>
 <div class="onboarding-welcome mb-2">
@@ -16,7 +16,7 @@ $onboardingSteps = [
     <div class="onboarding-welcome__inner">
         <div class="onboarding-welcome__head">
             <div class="onboarding-welcome__icon" aria-hidden="true">
-                <i class="ph ph-sparkle"></i>
+                <i class="ph-bold ph-hand-waving"></i>
             </div>
             <div>
                 <h3 class="onboarding-welcome__title">Bem-vindo ao Rezult</h3>
@@ -24,12 +24,12 @@ $onboardingSteps = [
             </div>
         </div>
         <div class="onboarding-welcome__steps">
-            <?php foreach ($onboardingSteps as $i => [$icon, $titulo, $desc, $href, $cta]):
+            <?php foreach ($onboardingSteps as $i => [$icon, $titulo, $desc, $href, $cta, $tone]):
                 $num = $i + 1;
             ?>
-            <div class="onboarding-step">
+            <div class="onboarding-step onboarding-step--<?= $tone ?>">
                 <span class="onboarding-step__num"><?= $num ?></span>
-                <div class="onboarding-step__icon"><i class="ph ph-<?= $icon ?>"></i></div>
+                <div class="onboarding-step__icon" aria-hidden="true"><i class="ph-bold ph-<?= $icon ?>"></i></div>
                 <div class="onboarding-step__body">
                     <strong><?= htmlspecialchars($titulo) ?></strong>
                     <p><?= htmlspecialchars($desc) ?></p>

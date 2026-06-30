@@ -8,10 +8,12 @@
     <title><?= $title ?? 'Rezult' ?> — <?= htmlspecialchars($appName) ?></title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+    <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/bold/style.css">
     <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.45.0/dist/apexcharts.min.js" defer></script>
-    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
     <link rel="manifest" href="/manifest.json">
-    <link rel="stylesheet" href="/assets/css/app.css?v=corp9">
+    <link rel="stylesheet" href="/assets/css/app.css?v=corp10">
 </head>
 <body>
 <div class="app-shell">
