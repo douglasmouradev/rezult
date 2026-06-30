@@ -48,6 +48,20 @@ final class DateTimeBr
         return date($format, $ts);
     }
 
+    /** Valor seguro para input datetime-local (vazio se data inválida). */
+    public static function toDatetimeLocal(?string $datetime): string
+    {
+        if ($datetime === null || trim($datetime) === '') {
+            return '';
+        }
+        $ts = strtotime($datetime);
+        if ($ts === false) {
+            return '';
+        }
+
+        return date('Y-m-d\TH:i', $ts);
+    }
+
     /** @return array{php: string, timezone: string, offset: string, mysql: ?string} */
     public static function diagnostico(?\PDO $pdo = null): array
     {

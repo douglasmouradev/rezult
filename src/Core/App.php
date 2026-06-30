@@ -62,8 +62,12 @@ final class App
                 $db['charset']
             );
             self::$pdo = new PDO($dsn, $db['username'], $db['password'], $db['options']);
-            $offset = DateTimeBr::mysqlOffset();
-            self::$pdo->exec("SET time_zone = " . self::$pdo->quote($offset));
+            try {
+                $offset = DateTimeBr::mysqlOffset();
+                self::$pdo->exec('SET time_zone = ' . self::$pdo->quote($offset));
+            } catch (\Throwable) {
+                // Hospedagem sem tabelas de timezone — segue com fuso do MySQL
+            }
         }
         return self::$pdo;
     }

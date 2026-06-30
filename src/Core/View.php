@@ -15,7 +15,10 @@ final class View
         $csrf = Csrf::token();
         $usuario = Session::get('usuario');
         $empresa = Session::get('empresa');
-        $empresas = Session::get('empresas', []);
+        $empresasMenu = Session::get('empresas', []);
+        if (!isset($empresas)) {
+            $empresas = $empresasMenu;
+        }
         $flash = Session::pullFlash();
         $appName = App::config('name');
         $appUrl = App::config('url');

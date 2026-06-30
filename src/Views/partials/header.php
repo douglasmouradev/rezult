@@ -46,11 +46,11 @@ $mesAtual = $meses[(int) date('n')] . ' ' . date('Y');
             <i class="ph ph-plus" aria-hidden="true"></i><span class="btn-header-lancamento__label"> Lançamento</span>
         </a>
         <?php endif; ?>
-        <?php if (!empty($empresas)): ?>
+        <?php if (!empty($empresasMenu)): ?>
         <form method="post" action="/empresas/<?= (int)($empresa['id'] ?? 0) ?>/trocar" class="empresa-selector" id="empresa-form">
             <input type="hidden" name="_csrf" value="<?= $csrf ?>">
             <select name="empresa_switch" aria-label="Empresa ativa" onchange="if(!this.options[this.selectedIndex].disabled){this.form.action='/empresas/'+this.value+'/trocar';this.form.submit()}">
-                <?php foreach ($empresas as $e):
+                <?php foreach ($empresasMenu as $e):
                     $bloqueio = $planSvcHeader->motivoBloqueio($e);
                     $operacional = $bloqueio === null;
                 ?>

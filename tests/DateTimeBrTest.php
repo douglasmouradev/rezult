@@ -19,5 +19,13 @@ final class DateTimeBrTest extends TestCase
         DateTimeBr::init('America/Sao_Paulo');
         $this->assertSame('—', DateTimeBr::format(null));
         $this->assertSame('—', DateTimeBr::format(''));
+        $this->assertSame('—', DateTimeBr::format('0000-00-00 00:00:00'));
+    }
+
+    public function testToDatetimeLocalInvalido(): void
+    {
+        DateTimeBr::init('America/Sao_Paulo');
+        $this->assertSame('', DateTimeBr::toDatetimeLocal(null));
+        $this->assertSame('', DateTimeBr::toDatetimeLocal('0000-00-00'));
     }
 }

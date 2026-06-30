@@ -210,7 +210,7 @@ final class SuperAdminController
 
         View::render('superadmin/empresas', [
             'title' => 'Lojas — Superadmin',
-            'empresas' => $this->service->listarEmpresas($filtro !== '' ? $filtro : null),
+            'lojas' => $this->service->listarEmpresas($filtro !== '' ? $filtro : null),
             'filtro' => $filtro,
             'planos' => (new \App\Services\PlanService())->limites(),
         ]);

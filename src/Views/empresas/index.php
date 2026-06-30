@@ -16,7 +16,7 @@
     <p class="text-muted" style="font-size:0.85rem;margin-top:8px">
         Plano: <strong><?= htmlspecialchars($planSvc->planoLabel($e['plano'] ?? 'starter')) ?></strong>
         <?php if (!empty($e['plano_expira_em'])): ?>
-        · expira <?= date('d/m/Y', strtotime($e['plano_expira_em'])) ?>
+        · expira <?= \App\Helpers\DateTimeBr::format($e['plano_expira_em'], 'd/m/Y') ?>
         <?php endif; ?>
     </p>
     <?php endif; ?>

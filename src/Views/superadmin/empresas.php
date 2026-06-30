@@ -2,8 +2,9 @@
 $svc = new \App\Services\SuperAdminService();
 $planSvc = new \App\Services\PlanService();
 $catalogo = $planSvc->catalogoPlanos();
-$fmtDt = static fn (?string $v): string => $v ? date('Y-m-d\TH:i', strtotime($v)) : '';
+$fmtDt = static fn (?string $v): string => \App\Helpers\DateTimeBr::toDatetimeLocal($v);
 $fmtView = static fn (?string $v): string => \App\Helpers\DateTimeBr::format($v);
+$lojas = $lojas ?? [];
 ?>
 <div class="page-header">
     <h1>Lojas</h1>
@@ -34,7 +35,7 @@ $fmtView = static fn (?string $v): string => \App\Helpers\DateTimeBr::format($v)
                 </tr>
             </thead>
             <tbody>
-            <?php foreach ($empresas as $e):
+            <?php foreach ($lojas as $e):
                 $status = $svc->statusPlano($e);
                 $eid = (int) $e['id'];
             ?>
@@ -130,6 +131,9 @@ $fmtView = static fn (?string $v): string => \App\Helpers\DateTimeBr::format($v)
                 </form>
             </dialog>
             <?php endforeach; ?>
+            <?php if ($lojas === []): ?>
+            <tr><td colspan="7" class="text-muted" style="text-align:center;padding:24px">Nenhuma loja cadastrada.</td></tr>
+            <?php endif; ?>
             </tbody>
         </table>
     </div>
