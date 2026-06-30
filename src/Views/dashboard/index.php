@@ -3,17 +3,53 @@ use App\Helpers\Money;
 $d = $dados;
 ?>
 <?php if (!empty($showOnboarding)): ?>
-<div class="card onboarding-card mb-2">
-    <h3>Bem-vindo ao Rezult</h3>
-    <p class="text-muted">Complete estes passos para começar:</p>
-    <ol class="onboarding-steps">
-        <li><a href="<?= $navUrl('/contas/criar') ?>">Cadastre uma conta bancária</a></li>
-        <li><a href="<?= $navUrl('/categorias') ?>">Organize suas categorias</a></li>
-        <li><a href="<?= $navUrl('/lancamentos/criar') ?>">Registre o primeiro lançamento</a></li>
-        <li>Explore o dashboard e relatórios</li>
-    </ol>
-    <form method="post" action="/onboarding/concluir"><input type="hidden" name="_csrf" value="<?= $csrf ?>">
-    <button class="btn btn-primary btn-sm">Marcar como concluído</button></form>
+<?php
+$onboardingSteps = [
+    ['wallet', 'Conta bancária', 'Cadastre onde entra e sai o dinheiro.', $navUrl('/contas/criar'), 'Cadastrar'],
+    ['tag', 'Categorias', 'Organize receitas e despesas por tipo.', $navUrl('/categorias'), 'Ver categorias'],
+    ['receipt', 'Primeiro lançamento', 'Registre uma movimentação real.', $navUrl('/lancamentos/criar'), 'Criar lançamento'],
+    ['chart-pie', 'Dashboard', 'Acompanhe saldo, fluxo e relatórios.', $navUrl('/dashboard'), null],
+];
+?>
+<div class="onboarding-welcome mb-2">
+    <div class="onboarding-welcome__glow" aria-hidden="true"></div>
+    <div class="onboarding-welcome__inner">
+        <div class="onboarding-welcome__head">
+            <div class="onboarding-welcome__icon" aria-hidden="true">
+                <i class="ph ph-sparkle"></i>
+            </div>
+            <div>
+                <h3 class="onboarding-welcome__title">Bem-vindo ao Rezult</h3>
+                <p class="onboarding-welcome__subtitle">Configure sua empresa em poucos minutos — siga os passos abaixo.</p>
+            </div>
+        </div>
+        <div class="onboarding-welcome__steps">
+            <?php foreach ($onboardingSteps as $i => [$icon, $titulo, $desc, $href, $cta]):
+                $num = $i + 1;
+            ?>
+            <div class="onboarding-step">
+                <span class="onboarding-step__num"><?= $num ?></span>
+                <div class="onboarding-step__icon"><i class="ph ph-<?= $icon ?>"></i></div>
+                <div class="onboarding-step__body">
+                    <strong><?= htmlspecialchars($titulo) ?></strong>
+                    <p><?= htmlspecialchars($desc) ?></p>
+                    <?php if ($cta): ?>
+                    <a href="<?= htmlspecialchars($href) ?>" class="onboarding-step__link"><?= htmlspecialchars($cta) ?> <i class="ph ph-arrow-right"></i></a>
+                    <?php endif; ?>
+                </div>
+            </div>
+            <?php endforeach; ?>
+        </div>
+        <div class="onboarding-welcome__foot">
+            <form method="post" action="/onboarding/concluir" class="onboarding-welcome__form">
+                <input type="hidden" name="_csrf" value="<?= $csrf ?>">
+                <button type="submit" class="btn btn-primary">
+                    <i class="ph ph-check-circle"></i> Concluir configuração
+                </button>
+            </form>
+            <p class="onboarding-welcome__hint">Você pode retomar estes passos pelo menu a qualquer momento.</p>
+        </div>
+    </div>
 </div>
 <?php endif; ?>
 <?php $resultadoHint = $d['resultado_mes'] >= 0 ? '↑ Lucro no período' : '↓ Prejuízo no período'; ?>

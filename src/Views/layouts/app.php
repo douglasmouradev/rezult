@@ -11,7 +11,7 @@
     <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.45.0/dist/apexcharts.min.js" defer></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <link rel="manifest" href="/manifest.json">
-    <link rel="stylesheet" href="/assets/css/app.css?v=corp8">
+    <link rel="stylesheet" href="/assets/css/app.css?v=corp9">
 </head>
 <body>
 <div class="app-shell">
