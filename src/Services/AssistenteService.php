@@ -17,6 +17,13 @@ final class AssistenteService
 
     public function responder(int $empresaId, string $pergunta): string
     {
+        $rate = new RateLimitService();
+        $chave = 'assistente_' . $empresaId;
+        if ($rate->excedido('assistente', $chave, 30, 60)) {
+            return 'Limite de perguntas atingido. Tente novamente em alguns minutos.';
+        }
+        $rate->registrar('assistente', $chave);
+
         $p = mb_strtolower(trim($pergunta));
 
         if ($this->openAiDisponivel() && $this->usuarioConsentiuIa()) {

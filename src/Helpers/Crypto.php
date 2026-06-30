@@ -24,20 +24,32 @@ final class Crypto
         return base64_encode($iv . $cipher);
     }
 
-    public static function decrypt(string $encoded): string
+    public static function decrypt(string $encoded, bool $strict = false): string
     {
         if ($encoded === '') {
             return '';
         }
         $raw = base64_decode($encoded, true);
         if ($raw === false || strlen($raw) < 17) {
+            if ($strict) {
+                throw new \RuntimeException('Dado criptografado inválido.');
+            }
+
             return $encoded;
         }
         $iv = substr($raw, 0, 16);
         $cipher = substr($raw, 16);
         $plain = openssl_decrypt($cipher, 'AES-256-CBC', self::key(), OPENSSL_RAW_DATA, $iv);
 
-        return $plain !== false ? $plain : $encoded;
+        if ($plain === false) {
+            if ($strict) {
+                throw new \RuntimeException('Falha ao descriptografar.');
+            }
+
+            return $encoded;
+        }
+
+        return $plain;
     }
 
     public static function mask(?string $secret, int $visible = 4): string

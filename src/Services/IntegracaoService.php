@@ -16,7 +16,7 @@ final class IntegracaoService
     /** @var array<string, list<string>> */
     private const SECRET_FIELDS = [
         self::PROVEDOR_OPEN_FINANCE => ['client_secret'],
-        self::PROVEDOR_GATEWAY => ['api_key'],
+        self::PROVEDOR_GATEWAY => ['api_key', 'webhook_token'],
         self::PROVEDOR_NFSE => ['token'],
     ];
 
@@ -135,10 +135,23 @@ final class IntegracaoService
     {
         foreach (self::SECRET_FIELDS[$provedor] ?? [] as $field) {
             if (!empty($config[$field])) {
-                $config[$field] = Crypto::decrypt((string) $config[$field]);
+                $val = (string) $config[$field];
+                $config[$field] = self::looksEncrypted($val)
+                    ? Crypto::decrypt($val, strict: true)
+                    : $val;
             }
         }
 
         return $config;
+    }
+
+    private static function looksEncrypted(string $value): bool
+    {
+        if (strlen($value) < 24) {
+            return false;
+        }
+        $raw = base64_decode($value, true);
+
+        return $raw !== false && strlen($raw) > 16;
     }
 }

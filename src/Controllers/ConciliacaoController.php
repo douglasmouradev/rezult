@@ -6,6 +6,7 @@ namespace App\Controllers;
 
 use App\Core\View;
 use App\Helpers\Session;
+use App\Helpers\Upload;
 use App\Models\Conciliacao;
 use App\Models\Conta;
 use App\Models\Lancamento;
@@ -43,18 +44,21 @@ final class ConciliacaoController
             View::redirect('/conciliacoes');
         }
 
-        $nome = $_FILES['arquivo']['name'] ?? '';
-        $ext = strtolower(pathinfo($nome, PATHINFO_EXTENSION));
-        $path = $_FILES['arquivo']['tmp_name'];
+        try {
+            $file = Upload::validateImport($_FILES['arquivo']);
+        } catch (\InvalidArgumentException $e) {
+            Session::flash('error', $e->getMessage());
+            View::redirect('/conciliacoes');
+        }
 
-        $id = match ($ext) {
-            'ofx' => $this->service->importarOfx($eid, $contaId, $path),
-            'csv' => $this->service->importarCsv($eid, $contaId, $path),
+        $id = match ($file['ext']) {
+            'ofx' => $this->service->importarOfx($eid, $contaId, $file['path']),
+            'csv' => $this->service->importarCsv($eid, $contaId, $file['path']),
             default => null,
         };
 
         if ($id === null) {
-            Session::flash('error', 'Formato não suportado. Use CSV ou OFX.');
+            Session::flash('error', 'Não foi possível importar o extrato.');
             View::redirect('/conciliacoes');
         }
 
@@ -80,13 +84,17 @@ final class ConciliacaoController
 
     public function conciliar(int $id): void
     {
-        $this->service->conciliarManual(
-            (int) $_POST['item_id'],
-            (int) $_POST['lancamento_id'],
-            $this->eid(),
-            $id
-        );
-        Session::flash('success', 'Item conciliado.');
+        try {
+            $this->service->conciliarManual(
+                (int) $_POST['item_id'],
+                (int) $_POST['lancamento_id'],
+                $this->eid(),
+                $id
+            );
+            Session::flash('success', 'Item conciliado.');
+        } catch (\InvalidArgumentException $e) {
+            Session::flash('error', $e->getMessage());
+        }
         View::redirect('/conciliacoes/' . $id);
     }
 

@@ -25,8 +25,12 @@ final class ApiController
     {
         $eid = (int) Session::get('empresa_id');
         $input = json_decode(file_get_contents('php://input') ?: '{}', true) ?: $_POST;
-        $id = (new LancamentoService())->salvar($eid, $input);
-        View::json(['id' => $id], 201);
+        try {
+            $id = (new LancamentoService())->salvar($eid, $input);
+            View::json(['data' => ['id' => $id]], 201);
+        } catch (\InvalidArgumentException $e) {
+            View::json(['errors' => [['message' => $e->getMessage()]]], 422);
+        }
     }
 
     public function contas(): void

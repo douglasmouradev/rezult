@@ -53,6 +53,8 @@ final class CobrancaService
             'status' => 'emitida',
             'codigo_pix' => $emitido['codigo_pix'],
             'linha_digitavel' => $emitido['linha_digitavel'],
+            'gateway_id' => $emitido['gateway_id'] ?? null,
+            'gateway_provedor' => $emitido['gateway_provedor'] ?? null,
         ], $empresaId);
 
         if (empty($c['lancamento_id'])) {
@@ -114,7 +116,7 @@ final class CobrancaService
     public function marcarPaga(int $id, int $empresaId): void
     {
         $c = $this->model->find($id, $empresaId);
-        if (!$c) {
+        if (!$c || $c['status'] === 'paga') {
             return;
         }
         $this->model->save(['id' => $id, 'status' => 'paga'], $empresaId);
@@ -136,25 +138,6 @@ final class CobrancaService
     public function modoCobranca(int $empresaId): string
     {
         return (new GatewayService())->modoAtual($empresaId);
-    }
-
-    private function gerarCodigoPix(array $c): string
-    {
-        $valor = number_format((float) $c['valor'], 2, '.', '');
-        return '00020126580014BR.GOV.BCB.PIX0136' . substr(md5($c['id'] . $c['cliente_nome']), 0, 32)
-            . '520400005303986540' . str_pad(strlen($valor) + 4, 2, '0', STR_PAD_LEFT) . $valor
-            . '5802BR5925REZULT COBRANCA DEMO6009SAO PAULO62070503***6304' . strtoupper(substr(md5((string) $c['id']), 0, 4));
-    }
-
-    private function gerarLinhaDigitavel(array $c): string
-    {
-        return sprintf(
-            '23793.38128 %s %s %s %s',
-            str_pad((string) ((int) ($c['valor'] * 100)), 10, '0', STR_PAD_LEFT),
-            date('dmy', strtotime($c['vencimento'])),
-            str_pad((string) $c['id'], 10, '0', STR_PAD_LEFT),
-            substr(md5((string) $c['id']), 0, 14)
-        );
     }
 
     private function primeiraConta(int $empresaId): int

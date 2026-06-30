@@ -8,8 +8,19 @@
 <input type="file" name="arquivo" accept=".csv,.ofx" required style="margin:12px 0">
 <button class="btn-primary">Importar</button></form></div>
 <div class="card"><h3>Histórico</h3>
+<?php if (empty($lista)): ?>
+    <?php
+    $icone = 'bank';
+    $titulo = 'Nenhuma conciliação';
+    $texto = 'Importe um extrato CSV ou OFX para começar a conciliar.';
+    $acaoUrl = null;
+    require __DIR__ . '/../partials/empty-state.php';
+    ?>
+<?php else: ?>
 <table><thead><tr><th>Conta</th><th>Itens</th><th>Status</th><th></th></tr></thead><tbody>
 <?php foreach ($lista as $c): ?>
 <tr><td><?= htmlspecialchars($c['conta_nome']) ?></td><td><?= (int)$c['conciliados'] ?>/<?= (int)$c['total_itens'] ?></td>
 <td><?= ucfirst($c['status']) ?></td><td><a href="/conciliacoes/<?= $c['id'] ?>">Abrir</a></td></tr>
-<?php endforeach; ?></tbody></table></div></div>
+<?php endforeach; ?></tbody></table>
+<?php endif; ?>
+</div></div>

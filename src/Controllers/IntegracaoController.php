@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Core\App;
 use App\Core\View;
 use App\Helpers\Sanitize;
 use App\Helpers\Session;
@@ -43,8 +44,11 @@ final class IntegracaoController
                 'ambiente' => $_POST['ambiente'] ?? 'sandbox',
             ],
             IntegracaoService::PROVEDOR_GATEWAY => [
+                'provedor' => Sanitize::raw($_POST['gateway_provedor'] ?? 'asaas'),
+                'ambiente' => $_POST['ambiente'] ?? 'sandbox',
                 'api_key' => Sanitize::raw($_POST['api_key'] ?? ''),
-                'webhook_url' => Sanitize::raw($_POST['webhook_url'] ?? ''),
+                'webhook_url' => rtrim((string) App::config('url'), '/') . '/webhooks/gateway/asaas',
+                'webhook_token' => Sanitize::raw($_POST['webhook_token'] ?? ''),
             ],
             IntegracaoService::PROVEDOR_NFSE => [
                 'cnpj' => Sanitize::raw($_POST['cnpj'] ?? ''),

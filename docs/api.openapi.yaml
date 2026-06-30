@@ -11,25 +11,120 @@ paths:
   /api/v1/lancamentos:
     get:
       summary: Listar lançamentos
+      parameters:
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 1, default: 1 }
+        - name: status
+          in: query
+          schema: { type: string, enum: [pendente, pago, cancelado, aguardando_aprovacao] }
       responses:
         '200':
-          description: Lista de lançamentos
+          description: Lista paginada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: array, items: { $ref: '#/components/schemas/Lancamento' } }
+                  meta: { $ref: '#/components/schemas/PaginationMeta' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '429': { $ref: '#/components/responses/RateLimited' }
     post:
       summary: Criar lançamento (token read_write)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LancamentoInput' }
       responses:
         '201':
           description: Criado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: object, properties: { id: { type: integer } } }
+        '422': { $ref: '#/components/responses/ValidationError' }
   /api/v1/contas:
     get:
       summary: Listar contas
+      responses:
+        '200':
+          description: Lista de contas
   /api/v1/categorias:
     get:
       summary: Listar categorias
+      responses:
+        '200':
+          description: Lista de categorias
   /api/v1/cobrancas:
     get:
       summary: Listar cobranças
+      responses:
+        '200':
+          description: Lista paginada de cobranças
+  /webhooks/gateway/asaas:
+    post:
+      summary: Webhook incoming Asaas (não usa Bearer)
+      description: Configurar no painel Asaas. Valida header asaas-access-token.
+      responses:
+        '200': { description: Processado }
+        '403': { description: Token inválido }
 components:
   securitySchemes:
     bearerAuth:
       type: http
       scheme: bearer
+  schemas:
+    Lancamento:
+      type: object
+      properties:
+        id: { type: integer }
+        tipo: { type: string, enum: [receita, despesa] }
+        valor: { type: number }
+        status: { type: string }
+        descricao: { type: string }
+    LancamentoInput:
+      type: object
+      required: [conta_id, tipo, valor, descricao]
+      properties:
+        conta_id: { type: integer }
+        tipo: { type: string }
+        valor: { type: number }
+        descricao: { type: string }
+        status: { type: string }
+    PaginationMeta:
+      type: object
+      properties:
+        page: { type: integer }
+        pages: { type: integer }
+    ErrorItem:
+      type: object
+      properties:
+        message: { type: string }
+  responses:
+    Unauthorized:
+      description: Token ausente ou inválido
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error: { type: string }
+    Forbidden:
+      description: Plano ou escopo insuficiente
+    RateLimited:
+      description: Muitas requisições
+    ValidationError:
+      description: Dados inválidos
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              errors:
+                type: array
+                items: { $ref: '#/components/schemas/ErrorItem' }

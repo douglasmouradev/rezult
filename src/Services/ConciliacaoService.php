@@ -56,7 +56,7 @@ final class ConciliacaoService
                 || (isset($row[2]) && str_contains($row[2], '-'))
                 ? 'debito' : 'credito';
 
-            $lancId = $this->buscarLancamento($empresaId, $contaId, $data, $valor, $tipo);
+            $lancId = $this->buscarLancamento($empresaId, $contaId, $data, $valor, $tipo, $desc);
             $status = $lancId ? 'conciliado' : 'pendente';
             if ($lancId) {
                 $conciliados++;
@@ -119,7 +119,7 @@ final class ConciliacaoService
             }
             $tipo = (float) $tx['amount'] < 0 ? 'debito' : 'credito';
 
-            $lancId = $this->buscarLancamento($empresaId, $contaId, $data, $valor, $tipo);
+            $lancId = $this->buscarLancamento($empresaId, $contaId, $data, $valor, $tipo, (string) $tx['description']);
             $status = $lancId ? 'conciliado' : 'pendente';
             if ($lancId) {
                 $conciliados++;
@@ -154,8 +154,33 @@ final class ConciliacaoService
     public function conciliarManual(int $itemId, int $lancamentoId, int $empresaId, int $conciliacaoId): void
     {
         $conc = $this->model->find($conciliacaoId, $empresaId);
-        if (!$conc || !$this->lancamentos->find($lancamentoId, $empresaId)) {
+        if (!$conc) {
             TenantPolicy::forbidden();
+        }
+
+        $stmt = App::pdo()->prepare(
+            'SELECT * FROM conciliacao_itens WHERE id = :i AND conciliacao_id = :c AND status = \'pendente\' LIMIT 1'
+        );
+        $stmt->execute(['i' => $itemId, 'c' => $conciliacaoId]);
+        $item = $stmt->fetch();
+        if (!$item) {
+            throw new \InvalidArgumentException('Item de conciliação inválido.');
+        }
+
+        $lanc = $this->lancamentos->find($lancamentoId, $empresaId);
+        if (!$lanc) {
+            TenantPolicy::forbidden();
+        }
+
+        $tipoEsperado = $item['tipo_movimento'] === 'credito' ? 'receita' : 'despesa';
+        if ($lanc['tipo'] !== $tipoEsperado) {
+            throw new \InvalidArgumentException('Tipo do lançamento não corresponde ao item do extrato.');
+        }
+        if (abs((float) $lanc['valor'] - (float) $item['valor']) > 0.01) {
+            throw new \InvalidArgumentException('Valor do lançamento não corresponde ao item do extrato.');
+        }
+        if ((int) $lanc['conta_id'] !== (int) $conc['conta_id']) {
+            throw new \InvalidArgumentException('Lançamento pertence a outra conta.');
         }
 
         App::pdo()->prepare(
@@ -214,19 +239,40 @@ final class ConciliacaoService
         return $lancId;
     }
 
-    private function buscarLancamento(int $empresaId, int $contaId, string $data, float $valor, string $tipo): ?int
+    private function buscarLancamento(int $empresaId, int $contaId, string $data, float $valor, string $tipo, string $descricao = ''): ?int
     {
         $tipoLanc = $tipo === 'credito' ? 'receita' : 'despesa';
         $stmt = App::pdo()->prepare(
-            "SELECT id FROM lancamentos
+            "SELECT id, descricao FROM lancamentos
              WHERE empresa_id = :e AND conta_id = :c AND tipo = :t
              AND ABS(valor - :v) < 0.01 AND conciliado_em IS NULL
-             AND data_lancamento BETWEEN DATE_SUB(:d, INTERVAL 3 DAY) AND DATE_ADD(:d, INTERVAL 3 DAY)
-             LIMIT 1"
+             AND data_lancamento BETWEEN DATE_SUB(:d, INTERVAL 3 DAY) AND DATE_ADD(:d, INTERVAL 3 DAY)"
         );
         $stmt->execute(['e' => $empresaId, 'c' => $contaId, 't' => $tipoLanc, 'v' => $valor, 'd' => $data]);
-        $id = $stmt->fetchColumn();
-        return $id ? (int) $id : null;
+        $candidatos = $stmt->fetchAll();
+        if ($candidatos === []) {
+            return null;
+        }
+
+        $descNorm = $this->normalizarDescricao($descricao);
+        if ($descNorm !== '') {
+            foreach ($candidatos as $row) {
+                $lancDesc = $this->normalizarDescricao((string) ($row['descricao'] ?? ''));
+                if ($lancDesc !== '' && similar_text($descNorm, $lancDesc) / max(strlen($descNorm), strlen($lancDesc), 1) >= 0.45) {
+                    return (int) $row['id'];
+                }
+            }
+        }
+
+        return (int) $candidatos[0]['id'];
+    }
+
+    private function normalizarDescricao(string $texto): string
+    {
+        $t = mb_strtolower(trim($texto));
+        $t = preg_replace('/\s+/', ' ', $t) ?? $t;
+
+        return $t;
     }
 
     private function atualizarTotais(int $concId, int $empresaId): void

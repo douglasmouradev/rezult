@@ -1,7 +1,7 @@
 <?php require __DIR__ . '/../partials/flash.php'; ?>
 <div class="page-header"><h1>Integrações</h1><p class="text-muted">Conecte serviços externos à sua empresa.</p></div>
-<div class="card mb-2" style="background:#fff8e6;border-color:#f59e0b">
-    <p style="margin:0"><strong>Modo demonstração:</strong> Open Finance, gateway e NFS-e salvam configuração criptografada, mas ainda não executam chamadas reais aos provedores. Cobranças usam gateway quando configurado; caso contrário, Pix/boleto são simulados.</p>
+<div class="card mb-2" style="background:#ecfdf5;border-color:#10b981">
+    <p style="margin:0"><strong>Gateway Asaas:</strong> cobranças reais com confirmação automática via webhook. Open Finance e NFS-e ainda em evolução.</p>
 </div>
 <div class="grid-3">
     <div class="card">
@@ -44,12 +44,30 @@
             <input type="hidden" name="_csrf" value="<?= $csrf ?>">
             <input type="hidden" name="provedor" value="gateway">
             <div class="form-group">
-                <label>API Key</label>
-                <input class="input" name="api_key" type="password" value="" placeholder="<?= !empty($gateway['config']['api_key_preenchido']) ? '•••••••• (salvo)' : 'Chave da API' ?>">
+                <label>Provedor</label>
+                <select name="gateway_provedor" class="input">
+                    <option value="asaas" <?= ($gateway['config']['provedor'] ?? 'asaas') === 'asaas' ? 'selected' : '' ?>>Asaas</option>
+                </select>
             </div>
             <div class="form-group">
-                <label>Webhook URL</label>
-                <input class="input" name="webhook_url" value="<?= htmlspecialchars($gateway['config']['webhook_url'] ?? '') ?>" placeholder="https://...">
+                <label>Ambiente</label>
+                <select name="ambiente" class="input">
+                    <option value="sandbox" <?= ($gateway['config']['ambiente'] ?? 'sandbox') === 'sandbox' ? 'selected' : '' ?>>Sandbox</option>
+                    <option value="producao" <?= ($gateway['config']['ambiente'] ?? '') === 'producao' ? 'selected' : '' ?>>Produção</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>API Key</label>
+                <input class="input" name="api_key" type="password" value="" placeholder="<?= !empty($gateway['config']['api_key_preenchido']) ? '•••••••• (salvo)' : 'Chave da API Asaas' ?>">
+            </div>
+            <div class="form-group">
+                <label>Webhook URL (configure no painel Asaas)</label>
+                <input class="input" name="webhook_url" value="<?= htmlspecialchars($gateway['config']['webhook_url'] ?? (rtrim((string)($appUrl ?? ''), '/') . '/webhooks/gateway/asaas')) ?>" readonly>
+                <small class="text-muted">URL fixa do Rezult para receber confirmações de pagamento.</small>
+            </div>
+            <div class="form-group">
+                <label>Token do webhook (asaas-access-token)</label>
+                <input class="input" name="webhook_token" type="password" value="" placeholder="<?= !empty($gateway['config']['webhook_token_preenchido']) ? '•••••••• (salvo)' : 'Token configurado no Asaas' ?>">
             </div>
             <label class="filter-label" style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
                 <input type="checkbox" name="ativo" value="1" <?= !empty($gateway['ativo']) ? 'checked' : '' ?>>

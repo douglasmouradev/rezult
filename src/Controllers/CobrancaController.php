@@ -26,9 +26,11 @@ final class CobrancaController
     public function index(): void
     {
         $eid = $this->eid();
+        $modo = (new \App\Services\CobrancaService())->modoCobranca($eid);
         View::render('cobrancas/index', [
             'title' => 'Cobranças',
             'resultado' => $this->model->listar($eid, ['status' => $_GET['status'] ?? ''], max(1, (int) ($_GET['page'] ?? 1))),
+            'modoCobranca' => $modo,
         ]);
     }
 

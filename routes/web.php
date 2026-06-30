@@ -32,6 +32,7 @@ use App\Controllers\AutomacaoController;
 use App\Controllers\ConciliacaoController;
 use App\Controllers\AssistenteController;
 use App\Controllers\WebhookController;
+use App\Controllers\GatewayWebhookController;
 use App\Controllers\SuperAdminController;
 use App\Middleware\AuthMiddleware;
 use App\Middleware\CsrfMiddleware;
@@ -63,6 +64,8 @@ $featAssistente = new PlanFeatureMiddleware('assistente_ia');
 $featConciliacao = new PlanFeatureMiddleware('conciliacao');
 
 $router->get('/health', $wrap([HealthController::class, 'check']));
+
+$router->post('/webhooks/gateway/asaas', $wrap([GatewayWebhookController::class, 'asaas']));
 
 $router->get('/login', $wrap([AuthController::class, 'loginForm']), [$guest]);
 $router->post('/login', $wrap([AuthController::class, 'login']), [$guest, $csrf]);
@@ -195,7 +198,7 @@ $router->get('/notas-fiscais/criar', $wrap([NotaFiscalController::class, 'criarF
 $router->get('/notas-fiscais/{id}', $wrap([NotaFiscalController::class, 'ver']), [$auth, $empresa, $featNfse]);
 $router->get('/notas-fiscais/{id}/editar', $wrap([NotaFiscalController::class, 'editarForm']), [$auth, $empresa, $featNfse]);
 $router->post('/notas-fiscais', $wrap([NotaFiscalController::class, 'salvar']), [$auth, $empresa, $featNfse, $csrf]);
-$router->post('/notas-fiscais/{id}/emitir', $wrap([NotaFiscalController::class, 'emitir']), [$auth, $empresa, $featNfse, $csrf]);
+$router->post('/notas-fiscais/{id}/emitir', $wrap([NotaFiscalController::class, 'emitir']), [$auth, $empresa, $featNfse, $rbac, $csrf]);
 
 $router->get('/automacoes', $wrap([AutomacaoController::class, 'index']), [$auth, $empresa, $rbac, $featAutomacoes]);
 $router->post('/automacoes', $wrap([AutomacaoController::class, 'salvar']), [$auth, $empresa, $rbac, $featAutomacoes, $csrf]);

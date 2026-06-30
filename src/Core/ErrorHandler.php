@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Core;
 
 use App\Helpers\Session;
+use App\Services\MailService;
 use Throwable;
 
 final class ErrorHandler
@@ -31,6 +32,8 @@ final class ErrorHandler
             'trace' => $e->getTraceAsString(),
         ]);
 
+        self::alertarEquipe($e);
+
         if (!headers_sent()) {
             http_response_code(500);
         }
@@ -45,6 +48,29 @@ final class ErrorHandler
             View::render('errors/500', ['title' => 'Erro interno'], layout: $layout);
         } catch (Throwable) {
             echo 'Erro interno. Tente novamente mais tarde.';
+        }
+    }
+
+    private static function alertarEquipe(Throwable $e): void
+    {
+        $email = trim((string) ($_ENV['ERROR_ALERT_EMAIL'] ?? ''));
+        if ($email === '' || App::config('env') !== 'production') {
+            return;
+        }
+
+        static $enviado = false;
+        if ($enviado) {
+            return;
+        }
+        $enviado = true;
+
+        try {
+            $corpo = "Erro em " . App::config('url') . "\n\n"
+                . $e->getMessage() . "\n"
+                . $e->getFile() . ':' . $e->getLine();
+            (new MailService())->enviar($email, '[Rezult] Erro crítico', $corpo);
+        } catch (Throwable) {
+            /* evita loop */
         }
     }
 }

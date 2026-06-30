@@ -56,9 +56,19 @@ Gestão de plano: `/plano` · Superadmin: `/superadmin/empresas`
 - `storage/` bloqueado via `.htaccess`
 - CSRF + header `X-CSRF-Token`
 
-## Integrações (modo demonstração)
+## Integrações
 
-Open Finance, gateway e NFS-e salvam configuração; chamadas reais aos provedores são extensão futura. Cobranças usam gateway se configurado. Com `FINANCIAL_MODE=demo` (padrão), Pix/boleto simulados são permitidos; em `live` + produção, exige gateway ativo.
+### Gateway Asaas (cobranças reais)
+
+1. Em **Integrações → Gateway**, informe API Key (sandbox ou produção) e token do webhook
+2. No painel Asaas, cadastre webhook: `https://seu-dominio.com/webhooks/gateway/asaas`
+3. Eventos: `PAYMENT_RECEIVED`, `PAYMENT_CONFIRMED`
+4. Com gateway ativo, Pix/boleto são emitidos via API — **sem simulação**
+5. Pagamentos confirmados atualizam cobrança e lançamento automaticamente
+
+Open Finance e NFS-e ainda salvam configuração; emissão municipal e extrato automático em evolução.
+
+Com `FINANCIAL_MODE=demo` (padrão local), Pix/boleto simulados são permitidos sem gateway. Em `live` + produção, exige gateway ativo.
 
 ## E-mail (SMTP)
 
@@ -69,11 +79,15 @@ Ver variáveis `MAIL_*` no `.env.example`.
 ```bash
 */15 * * * * php bin/cron-recorrente.php
 0 8 * * *     php bin/cron-emails.php
-0 9 * * *     php bin/cron-planos.php      # avisos + desativa expirados
+0 9 * * *     php bin/cron-planos.php
+0 * * * *     php bin/cron-automacao.php     # vencimentos + cobranças
 */30 * * * *  php bin/cron-webhooks.php
-0 4 * * *     php bin/cron-maintenance.php  # purge rate_limits
+0 4 * * *     php bin/cron-maintenance.php   # purge rate_limits
+0 2 * * *     php bin/cron-backup.php        # mysqldump (requer mysqldump no PATH)
 0 3 * * *     php bin/cron-lgpd.php
 ```
+
+Alertas de erro em produção: configure `ERROR_ALERT_EMAIL` no `.env`.
 
 ## API
 

@@ -7,6 +7,7 @@ namespace App\Controllers;
 use App\Core\View;
 use App\Helpers\Sanitize;
 use App\Helpers\Session;
+use App\Helpers\Upload;
 use App\Helpers\Validator;
 use App\Models\Categoria;
 use App\Models\Conta;
@@ -101,16 +102,23 @@ final class LancamentoController
     {
         $eid = $this->empresaId();
         $l = $this->model->find($id, $eid);
-        if ($l) {
-            $novo = $l['status'] === 'pago' ? 'pendente' : 'pago';
-            $this->model->save(['id' => $id, 'status' => $novo], $eid);
-            $this->model->invalidarCacheDashboard($eid);
-            if (!empty($l['meta_id'])) {
-                (new Meta())->atualizarProgresso((int) $l['meta_id'], $eid);
-            }
+        if (!$l) {
+            View::redirect('/lancamentos');
         }
+
+        $novo = $l['status'] === 'pago' ? 'pendente' : 'pago';
+        if ($novo === 'pago') {
+            \App\Policies\TenantPolicy::abortUnlessCanApproveLancamento();
+        }
+
+        $this->model->save(['id' => $id, 'status' => $novo], $eid);
+        $this->model->invalidarCacheDashboard($eid);
+        if (!empty($l['meta_id'])) {
+            (new Meta())->atualizarProgresso((int) $l['meta_id'], $eid);
+        }
+
         if (str_contains($_SERVER['HTTP_ACCEPT'] ?? '', 'json')) {
-            View::json(['status' => $novo ?? null]);
+            View::json(['status' => $novo]);
         }
         View::redirect('/lancamentos');
     }
@@ -152,7 +160,16 @@ final class LancamentoController
         if (empty($_FILES['csv']['tmp_name'])) {
             View::redirect('/lancamentos/importar');
         }
-        $preview = $this->service->previewCsv($eid, $_FILES['csv']['tmp_name']);
+        try {
+            $file = Upload::validateImport($_FILES['csv']);
+            if ($file['ext'] !== 'csv') {
+                throw new \InvalidArgumentException('Use um arquivo CSV.');
+            }
+        } catch (\InvalidArgumentException $e) {
+            Session::flash('error', $e->getMessage());
+            View::redirect('/lancamentos/importar');
+        }
+        $preview = $this->service->previewCsv($eid, $file['path']);
         $tmp = sys_get_temp_dir() . '/rezult_import_' . bin2hex(random_bytes(8)) . '.csv';
         move_uploaded_file($_FILES['csv']['tmp_name'], $tmp);
         Session::set('import_csv_path', $tmp);
@@ -171,8 +188,16 @@ final class LancamentoController
             unlink($path);
             Session::flash('success', "{$n} lançamentos importados.");
         } elseif (!empty($_FILES['csv']['tmp_name'])) {
-            $n = $this->service->importarCsv($eid, $_FILES['csv']['tmp_name']);
-            Session::flash('success', "{$n} lançamentos importados.");
+            try {
+                $file = Upload::validateImport($_FILES['csv']);
+                if ($file['ext'] !== 'csv') {
+                    throw new \InvalidArgumentException('Use um arquivo CSV.');
+                }
+                $n = $this->service->importarCsv($eid, $file['path']);
+                Session::flash('success', "{$n} lançamentos importados.");
+            } catch (\InvalidArgumentException $e) {
+                Session::flash('error', $e->getMessage());
+            }
         }
         View::redirect('/lancamentos');
     }
