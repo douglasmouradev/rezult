@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="8 8 92 88" role="img" aria-label="Rezult" overflow="hidden">
+  <path
+    fill="#0f766e"
+    d="M14 10h34q20 0 20 20t-20 20H34l24 36H38L18 50v40H14V10zm20 4h14q8 0 8 8t-8 8H34V14z"
+  />
+  <path
+    fill="none"
+    stroke="#d4a24c"
+    stroke-width="7.5"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    d="M22 84L40 60L54 70L80 28"
+  />
+  <path fill="#d4a24c" d="M80 28l12-6-4 14z"/>
+</svg>

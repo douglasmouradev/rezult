@@ -4,4 +4,4 @@ $faviconDataUri = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAAB
 ?>
 <link rel="icon" href="<?= $faviconDataUri ?>" type="image/png">
 <link rel="shortcut icon" href="<?= $faviconDataUri ?>" type="image/png">
-<link rel="apple-touch-icon" href="/assets/img/logo-rezult.png?v=5">
+<link rel="apple-touch-icon" href="/assets/img/logo-rezult.png?v=6">

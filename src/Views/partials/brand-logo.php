@@ -11,13 +11,14 @@ $class = $class ?? '';
 $imgClass = $imgClass ?? '';
 $showText = $showText ?? false;
 $imgHeight = $imgHeight ?? 36;
-$imgWidth = (int) round($imgHeight * (390 / 234));
+$imgWidth = $imgHeight;
+$logoSrc = '/assets/img/logo-rezult.svg?v=2';
 $tagOpen = $asLink ? '<a href="' . htmlspecialchars($href) . '"' : '<div';
 $tagClose = $asLink ? 'a' : 'div';
 ?>
 <?= $tagOpen ?> class="brand-logo <?= htmlspecialchars($class) ?>">
     <img
-        src="/assets/img/logo-rezult.png"
+        src="<?= htmlspecialchars($logoSrc) ?>"
         alt="Rezult"
         class="brand-logo__img <?= htmlspecialchars($imgClass) ?>"
         width="<?= $imgWidth ?>"
