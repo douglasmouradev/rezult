@@ -13,7 +13,7 @@
     <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.45.0/dist/apexcharts.min.js" defer></script>
     <script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
     <link rel="manifest" href="/manifest.json">
-    <link rel="stylesheet" href="/assets/css/app.css?v=corp11">
+    <link rel="stylesheet" href="/assets/css/app.css?v=corp12">
 </head>
 <body>
 <div class="app-shell">
@@ -39,7 +39,7 @@
 </div>
 <div id="toast-container" class="toast-container" aria-live="polite" aria-atomic="true"></div>
 <?php require __DIR__ . '/../partials/cookie-banner.php'; ?>
-<script src="/assets/js/app.js?v=8"></script>
+<script src="/assets/js/app.js?v=9"></script>
 <script>
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/sw.js').catch(function () {});
