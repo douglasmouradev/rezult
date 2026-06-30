@@ -42,6 +42,7 @@ use App\Middleware\PlanMiddleware;
 use App\Middleware\RbacMiddleware;
 use App\Controllers\PlanoController;
 use App\Middleware\PlanFeatureMiddleware;
+use App\Middleware\SuperAdminMiddleware;
 
 /** @var Router $router */
 $wrap = fn (array $h): callable => fn (...$p) => (new $h[0]())->{$h[1]}(...$p);
