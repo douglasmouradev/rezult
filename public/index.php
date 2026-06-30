@@ -58,6 +58,10 @@ if ($uri === '/manifest.json') {
     $sendFile($publicDir . '/manifest.json');
 }
 
+if ($uri === '/robots.txt') {
+    $sendFile($publicDir . '/robots.txt');
+}
+
 if (str_starts_with($uri, '/assets/')) {
     $base = realpath($publicDir . '/assets');
     $file = realpath($publicDir . $uri);

@@ -13,6 +13,7 @@ use App\Models\Categoria;
 use App\Models\Lancamento;
 use App\Models\Meta;
 use App\Policies\TenantPolicy;
+use App\Enums\PapelEmpresa;
 
 final class LancamentoService
 {
@@ -25,8 +26,12 @@ final class LancamentoService
 
     public function salvar(int $empresaId, array $input, ?int $id = null): int
     {
-        if ($id && !$this->model->find($id, $empresaId)) {
-            TenantPolicy::forbidden();
+        $existente = null;
+        if ($id) {
+            $existente = $this->model->find($id, $empresaId);
+            if (!$existente) {
+                TenantPolicy::forbidden();
+            }
         }
 
         $contaId = (int) $input['conta_id'];
@@ -52,11 +57,11 @@ final class LancamentoService
         $tags = array_filter(array_map('trim', explode(',', Sanitize::raw($input['tags'] ?? ''))));
         $tipo = EnumValidator::assertIn((string) $input['tipo'], EnumValidator::TIPOS_LANCAMENTO, 'Tipo');
         $status = EnumValidator::assertIn((string) ($input['status'] ?? 'pendente'), EnumValidator::STATUS_LANCAMENTO, 'Status');
-
-        $papel = TenantPolicy::papel($empresaId);
-        if (!$id && $papel?->value === 'operador' && $status === 'pago') {
-            $status = 'aguardando_aprovacao';
-        }
+        $status = self::resolverStatusParaPapel(
+            $status,
+            $existente['status'] ?? null,
+            TenantPolicy::papel($empresaId),
+        );
 
         $contatoId = !empty($input['contato_id']) ? (int) $input['contato_id'] : null;
 
@@ -265,5 +270,17 @@ final class LancamentoService
             default => $dt->modify('+1 month'),
         };
         return $dt->format('Y-m-d');
+    }
+
+    /** Regra RBAC: operador não marca lançamento como pago (criação ou edição). */
+    public static function resolverStatusParaPapel(string $status, ?string $statusAtual, ?PapelEmpresa $papel): string
+    {
+        if ($papel === PapelEmpresa::Operador
+            && $status === 'pago'
+            && ($statusAtual === null || $statusAtual !== 'pago')) {
+            return 'aguardando_aprovacao';
+        }
+
+        return $status;
     }
 }

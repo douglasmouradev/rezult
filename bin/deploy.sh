@@ -20,20 +20,37 @@ done
 echo "==> git pull"
 git pull origin main
 
-echo "==> testes"
-if command -v vendor/bin/phpunit >/dev/null 2>&1; then
-    vendor/bin/phpunit --colors=always || { echo "AVISO: testes falharam — deploy continua"; }
-elif [[ -f vendor/bin/phpunit ]]; then
-    php vendor/bin/phpunit --colors=always || { echo "AVISO: testes falharam — deploy continua"; }
+echo "==> composer install (dev — para testes)"
+if command -v composer >/dev/null 2>&1; then
+    composer install --optimize-autoloader
 else
-    echo "AVISO: phpunit não encontrado — pulando testes"
+    php "$(command -v composer.phar 2>/dev/null || echo composer.phar)" install --optimize-autoloader 2>/dev/null || {
+        echo "ERRO: composer não encontrado"
+        exit 1
+    }
 fi
 
-echo "==> composer install"
+echo "==> testes"
+if command -v vendor/bin/phpunit >/dev/null 2>&1; then
+    vendor/bin/phpunit --colors=always
+elif [[ -f vendor/bin/phpunit ]]; then
+    php vendor/bin/phpunit --colors=always
+else
+    echo "ERRO: phpunit não encontrado — rode composer install"
+    exit 1
+fi
+
+if command -v composer >/dev/null 2>&1; then
+    composer audit --no-ansi || exit 1
+elif [[ -f vendor/bin/composer ]]; then
+    php vendor/bin/composer audit --no-ansi || exit 1
+fi
+
+echo "==> composer install (produção)"
 if command -v composer >/dev/null 2>&1; then
     composer install --no-dev --optimize-autoloader
 else
-    php "$(command -v composer.phar 2>/dev/null || echo composer.phar)" install --no-dev --optimize-autoloader 2>/dev/null || echo "AVISO: composer não encontrado — instale dependências manualmente"
+    php "$(command -v composer.phar 2>/dev/null || echo composer.phar)" install --no-dev --optimize-autoloader
 fi
 
 echo "==> migrations"
@@ -43,7 +60,7 @@ echo "==> repair schema"
 php bin/repair-schema.php
 
 echo "==> doctor"
-php bin/doctor.php || true
+php bin/doctor.php
 
 echo "==> permissões storage"
 chmod -R 775 storage 2>/dev/null || true

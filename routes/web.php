@@ -96,6 +96,7 @@ $router->post('/privacidade/cookies', $wrap([LgpdController::class, 'aceitarCook
 $router->get('/arquivo', $wrap([ArquivoController::class, 'download']), [$auth, $empresa]);
 
 $router->get('/', $wrap([LandingController::class, 'index']));
+$router->get('/sitemap.xml', $wrap([LandingController::class, 'sitemap']));
 $router->get('/dashboard', $wrap([DashboardController::class, 'index']), [$auth, $empresa]);
 $router->post('/onboarding/concluir', $wrap([DashboardController::class, 'concluirOnboarding']), [$auth, $csrf]);
 
@@ -200,7 +201,7 @@ $router->get('/notas-fiscais', $wrap([NotaFiscalController::class, 'index']), [$
 $router->get('/notas-fiscais/criar', $wrap([NotaFiscalController::class, 'criarForm']), [$auth, $empresa, $featNfse]);
 $router->get('/notas-fiscais/{id}', $wrap([NotaFiscalController::class, 'ver']), [$auth, $empresa, $featNfse]);
 $router->get('/notas-fiscais/{id}/editar', $wrap([NotaFiscalController::class, 'editarForm']), [$auth, $empresa, $featNfse]);
-$router->post('/notas-fiscais', $wrap([NotaFiscalController::class, 'salvar']), [$auth, $empresa, $featNfse, $csrf]);
+$router->post('/notas-fiscais', $wrap([NotaFiscalController::class, 'salvar']), [$auth, $empresa, $featNfse, $rbac, $csrf]);
 $router->post('/notas-fiscais/{id}/emitir', $wrap([NotaFiscalController::class, 'emitir']), [$auth, $empresa, $featNfse, $rbac, $csrf]);
 
 $router->get('/automacoes', $wrap([AutomacaoController::class, 'index']), [$auth, $empresa, $rbac, $featAutomacoes]);

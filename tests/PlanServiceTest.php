@@ -40,4 +40,27 @@ final class PlanServiceTest extends TestCase
         ]);
         $this->assertStringContainsString('expirou', $motivo ?? '');
     }
+
+    public function testMotivoBloqueioTrialExpirado(): void
+    {
+        $plan = new \App\Services\PlanService();
+        $motivo = $plan->motivoBloqueio([
+            'ativo' => 1,
+            'plano_ativo' => 1,
+            'trial_ate' => '2020-01-01 00:00:00',
+        ]);
+        $this->assertStringContainsString('trial', strtolower($motivo ?? ''));
+    }
+
+    public function testTrialExpiradoComPlanoPagoAtivoNaoBloqueia(): void
+    {
+        $plan = new \App\Services\PlanService();
+        $motivo = $plan->motivoBloqueio([
+            'ativo' => 1,
+            'plano_ativo' => 1,
+            'trial_ate' => '2020-01-01 00:00:00',
+            'plano_expira_em' => date('Y-m-d H:i:s', strtotime('+30 days')),
+        ]);
+        $this->assertNull($motivo);
+    }
 }

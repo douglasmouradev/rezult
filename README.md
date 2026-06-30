@@ -108,11 +108,14 @@ CI roda migrations, audit, PHPStan e PHPUnit no GitHub Actions.
 ## Problemas em produção
 
 ```bash
-php bin/doctor.php          # diagnóstico (env, tabelas, colunas, log)
+php bin/doctor.php          # diagnóstico (env, SMTP, FINANCIAL_MODE, tabelas, log)
 php bin/repair-schema.php   # corrige colunas/tabelas ausentes
 php bin/migrate.php
 tail -50 storage/logs/app.log
 ```
+
+Em produção, `doctor.php` exige `MAIL_HOST` + `MAIL_USER` (SMTP) e recomenda `FINANCIAL_MODE=live`.
+O deploy (`bin/deploy.sh`) interrompe se testes ou `composer audit` falharem.
 
 Se aparecer erro de `APP_KEY`, adicione no `.env` (mín. 32 caracteres) e `HEALTH_TOKEN`.
 Após trocar `APP_KEY`, reconfigure integrações (segredos antigos ficam ilegíveis).

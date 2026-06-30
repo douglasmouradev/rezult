@@ -40,6 +40,15 @@ final class MailService
             return $ok;
         }
 
+        if (App::config('env') === 'production') {
+            Logger::error('E-mail não enviado: SMTP não configurado em produção', [
+                'para' => $para,
+                'assunto' => $assunto,
+            ]);
+
+            return false;
+        }
+
         return $this->gravarDev($para, $assunto, $html, $texto);
     }
 

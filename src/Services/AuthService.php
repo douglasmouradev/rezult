@@ -27,8 +27,6 @@ final class AuthService
 
     public function login(array $usuario, bool $lembrar = false): void
     {
-        SuperAdminService::sincronizarSuperadminConfig((int) $usuario['id'], (string) $usuario['email']);
-
         Session::regenerate();
         Session::set('usuario_id', $usuario['id']);
         Session::set('usuario', [

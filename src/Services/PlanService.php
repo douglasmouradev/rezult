@@ -187,6 +187,16 @@ final class PlanService
         if (isset($empresa['plano_ativo']) && !(int) $empresa['plano_ativo']) {
             return 'O plano desta loja está inativo. Entre em contato com o suporte.';
         }
+        if (!empty($empresa['trial_ate'])) {
+            $trialFim = strtotime((string) $empresa['trial_ate']);
+            $planoPagoAtivo = !empty($empresa['plano_expira_em'])
+                && strtotime((string) $empresa['plano_expira_em']) >= time();
+            if ($trialFim !== false && $trialFim < time() && !$planoPagoAtivo) {
+                return 'O período de trial encerrou em '
+                    . date('d/m/Y', $trialFim)
+                    . '. Solicite upgrade em /plano para continuar.';
+            }
+        }
         if (!empty($empresa['plano_expira_em']) && strtotime((string) $empresa['plano_expira_em']) < time()) {
             return 'O plano desta loja expirou em ' . date('d/m/Y', strtotime((string) $empresa['plano_expira_em'])) . '.';
         }

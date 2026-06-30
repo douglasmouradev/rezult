@@ -36,6 +36,13 @@ $health = trim((string) ($_ENV['HEALTH_TOKEN'] ?? ''));
 if ($env === 'production') {
     $print(strlen($key) >= 32 ? 'OK' : 'FAIL', 'APP_KEY (mín. 32 chars)');
     $print($health !== '' ? 'OK' : 'FAIL', 'HEALTH_TOKEN');
+
+    $financialMode = (string) App::config('financial_mode', 'demo');
+    $print($financialMode === 'live' ? 'OK' : 'WARN', 'FINANCIAL_MODE=' . $financialMode . ' (recomendado: live)');
+
+    $mailHost = trim((string) App::config('mail_host', ''));
+    $mailUser = trim((string) App::config('mail_user', ''));
+    $print($mailHost !== '' && $mailUser !== '' ? 'OK' : 'FAIL', 'SMTP (MAIL_HOST + MAIL_USER)');
 } else {
     $print('OK', 'APP_ENV=' . $env);
 }
@@ -64,6 +71,7 @@ $colunas = [
     ['empresas', 'onboarding_concluido'],
     ['empresas', 'plano_ativo'],
     ['empresas', 'plano'],
+    ['empresas', 'trial_ate'],
     ['cobrancas', 'gateway_id'],
     ['api_tokens', 'escopos'],
 ];

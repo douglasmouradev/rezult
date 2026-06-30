@@ -14,6 +14,9 @@
         <?php if (!empty($r['plano_expira_em'])): ?>
         <p class="text-muted">Expira em <?= date('d/m/Y H:i', strtotime((string) $r['plano_expira_em'])) ?></p>
         <?php endif; ?>
+        <?php if (!empty($r['trial_ate'])): ?>
+        <p class="text-muted">Trial até <?= date('d/m/Y H:i', strtotime((string) $r['trial_ate'])) ?></p>
+        <?php endif; ?>
         <ul style="margin:16px 0;padding-left:20px">
             <li>Empresas (dono): <?= $r['limites']['empresas'] ?? '∞' ?></li>
             <li>Usuários por loja: <?= $r['limites']['usuarios'] ?? '∞' ?></li>

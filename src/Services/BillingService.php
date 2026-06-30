@@ -64,7 +64,9 @@ final class BillingService
         }
 
         $placeholders = implode(',', array_fill(0, count($ids), '?'));
-        App::pdo()->prepare("UPDATE empresas SET plano_ativo = 0 WHERE id IN ({$placeholders})")->execute($ids);
+        App::pdo()->prepare(
+            "UPDATE empresas SET plano_ativo = 0, plano = 'starter' WHERE id IN ({$placeholders})"
+        )->execute($ids);
 
         return count($ids);
     }
